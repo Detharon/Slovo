@@ -2,8 +2,11 @@ package com.dth.slovo;
 
 import com.dth.entity.WordOccurrence;
 import java.io.File;
+import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import org.apache.commons.collections.CollectionUtils;
 import org.junit.Test;
 import static org.junit.Assert.*;
@@ -13,7 +16,15 @@ public class DocumentProcessorTest {
     
     @Test
     public void processEnglishSimple() {
-        File file = new File(ClassLoader.getSystemResource(ENGLISH_SIMPLE).getFile());
+        File file = null;
+        try {
+            file = new File(getClass().getClassLoader().getResource(ENGLISH_SIMPLE).toURI());
+        } catch (URISyntaxException e) {
+            e.printStackTrace(System.out);
+        }
+
+        if (file == null) fail("File not found.");
+        
         DocumentProcessor documentProcessor = new DocumentProcessor(file);        
         documentProcessor.processFile();
         ArrayList<WordOccurrence> resultWords = new ArrayList<>(documentProcessor.getWords());
