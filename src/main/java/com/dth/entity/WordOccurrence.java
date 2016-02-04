@@ -1,0 +1,97 @@
+package com.dth.entity;
+
+import java.io.Serializable;
+import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
+import javax.persistence.Id;
+
+@Entity
+public class WordOccurrence implements Serializable, Comparable<WordOccurrence> {
+    private static final long serialVersionUID = 1L;
+    @Id
+    @GeneratedValue(strategy = GenerationType.AUTO)
+    private Long id;
+    private String word;
+    private int count;
+    
+    public WordOccurrence() {
+        this("", 1);
+    }
+    
+    public WordOccurrence(String word) {
+        this(word, 1);
+    }
+    
+    public WordOccurrence(String word, int count) {
+        this.word = word;
+        this.count = count;
+    }
+
+    public Long getId() {
+        return id;
+    }
+
+    public void setId(Long id) {
+        this.id = id;
+    }
+    
+    public String getWord() {
+        return word;
+    }
+    
+    public void setWord(String word) {
+        this.word = word;
+    }
+    
+    public int getCount() {
+        return count;
+    }
+    
+    public void setCount(int count) {
+        this.count = count;
+    }
+    
+    public void incrementCount() {
+        count++;
+    }
+
+    @Override
+    public int hashCode() {
+        int hash = 0;
+        hash += (id != null ? id.hashCode() : 0);
+        return hash;
+    }
+
+    /**
+     * Objects are equal if their word and word counts are equal.
+     * They may have different or even null IDs. 
+     * @param object The object.
+     * @return True if object's word and count match, otherwise false.
+     */
+    @Override
+    public boolean equals(Object object) {
+        if (!(object instanceof WordOccurrence)) {
+            return false;
+        }
+        
+        WordOccurrence other = (WordOccurrence)object;       
+        return (this.getWord().equals(other.getWord())) && 
+               (this.getCount() == other.getCount()) ;
+    }
+    
+    @Override
+    public int compareTo(WordOccurrence other) {
+        if (count != other.getCount()) {
+            return this.getCount() - other.getCount();
+        }
+        
+        // If occurences are equal, compare the words  
+        return this.getWord().compareTo(other.getWord());
+    }
+
+    @Override
+    public String toString() {
+        return String.format("[%s %d]", word, count);
+    }
+}
