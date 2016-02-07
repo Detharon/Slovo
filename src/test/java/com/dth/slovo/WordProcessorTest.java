@@ -1,107 +1,44 @@
 package com.dth.slovo;
 
-import org.junit.Test;
 import static org.junit.Assert.assertEquals;
 
-public class WordProcessorTest {
-    private final WordProcessor wp = new WordProcessor();
+import java.util.Arrays;
+import java.util.Collection;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.Parameterized;
+import org.junit.runners.Parameterized.Parameters;
 
-    @Test
-    public void noChanges() {
-        String word = "word";
-        String expResult = "word";
-        String result = wp.processWord(word);
-        
-        assertEquals(expResult, result);
+@RunWith(Parameterized.class)
+public class WordProcessorTest {
+    private final String expected;
+    private final String result;
+
+    @Parameters
+    public static Collection<String[]> getTestParameters() {
+        return Arrays.asList(new String[][]{
+            {"word", "word"},
+            {"word", "WoRd"},
+            {"слово", "сЛоВо"},
+            {"word", ",word"},
+            {"word", "  word  "},
+            {"word", "word."},
+            {"word", "_word_"},
+            {"qué", "¿QUÉ?"},
+            {null, "."},
+            {null, ""},
+            {null, "    "}            
+        });
+    }
+    
+    public WordProcessorTest(String expected, String result) {
+        this.expected = expected;
+        this.result = result;
     }
     
     @Test
-    public void toLowerCase() {
-        String word = "WoRd";
-        String expResult = "word";
-        String result = wp.processWord(word);
-        
-        assertEquals(expResult, result);
-    }
-    
-    @Test
-    public void toLowerCaseRussian() {
-        String word = "СЛоВо";
-        String expResult = "слово";
-        String result = wp.processWord(word);
-        
-        assertEquals(expResult, result);
-    }
-    
-    @Test
-    public void removeLeadingComa() {
-        String word = ",word";
-        String expResult = "word";
-        String result = wp.processWord(word);
-        
-        assertEquals(expResult, result);
-    }
-    
-    @Test
-    public void removeWhitespaces() {
-        String word = "  word   ";
-        String expResult = "word";
-        String result = wp.processWord(word);
-        
-        assertEquals(expResult, result);
-    }
-    
-    @Test
-    public void removeTrailingDot() {
-        String word = "word.";
-        String expResult = "word";
-        String result = wp.processWord(word);
-        
-        assertEquals(expResult, result);
-    }
-    
-    @Test
-    public void removeLeadingTrailingUnderscore() {
-        String word = "_word_";
-        String expResult = "word";
-        String result = wp.processWord(word);
-        
-        assertEquals(expResult, result);
-    }
-    
-    @Test
-    public void removeLeadingTrailingQuestionMark_toLowerCaseSpanish() {
-        String word = "¿QUÉ?";
-        String expResult = "qué";
-        String result = wp.processWord(word);
-        
-        assertEquals(expResult, result);
-    }
-    
-    @Test
-    public void onlyDot() {
-        String word = ".";
-        String expResult = null;
-        String result = wp.processWord(word);
-        
-        assertEquals(expResult, result);
-    }
-    
-    @Test
-    public void emptyString() {
-        String word = "";
-        String expResult = null;
-        String result = wp.processWord(word);
-        
-        assertEquals(expResult, result);
-    }
-    
-    @Test
-    public void spaceTab() {
-        String word = "     ";
-        String expResult = null;
-        String result = wp.processWord(word);
-        
-        assertEquals(expResult, result);
+    public void testProcessWord() {
+        WordProcessor wp = new WordProcessor();
+        assertEquals(expected, wp.processWord(result));
     }
 }
