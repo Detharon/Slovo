@@ -1,7 +1,9 @@
 package com.dth.slovo;
 
 import com.dth.entity.WordOccurrence;
+import com.dth.service.CsvExportWords;
 import com.dth.service.EraseWords;
+import com.dth.service.ExportWords;
 import com.dth.service.FetchWords;
 import com.dth.service.SaveWords;
 import java.io.File;
@@ -88,14 +90,24 @@ public class Slovo extends Application {
         // Menu bar
         MenuBar menuBar = new MenuBar();
         
-        // File menu
+        // File menu item
         Menu fileMenu = new Menu("File");
         MenuItem openMenuItem = new MenuItem("Open");
         openMenuItem.setOnAction((ActionEvent event) -> {
             openButtonClicked();
         });
+        
+        // Export menu item
         MenuItem exportMenuItem = new MenuItem("Export");
-        MenuItem exitMenuItem = new MenuItem("Exit");        
+        exportMenuItem.setOnAction((ActionEvent event) -> {
+            exportMenuItemClicked();
+        });
+        
+        MenuItem exitMenuItem = new MenuItem("Exit");   
+        exitMenuItem.setOnAction((ActionEvent event) -> {
+            Platform.exit();
+        });
+        
         menuBar.getMenus().add(fileMenu);
 
         fileMenu.getItems().addAll(openMenuItem, exportMenuItem, exitMenuItem);
@@ -210,6 +222,34 @@ public class Slovo extends Application {
                 
                 Platform.runLater(() -> setReady());
                 populateTable(1000);
+            }).start();
+        }
+    }
+    
+    private static void exportMenuItemClicked() {
+        // TODO: Check whether there are words to be saved
+        
+        FileChooser fileChooser = new FileChooser();
+        fileChooser.setTitle("Select file to save");
+        fileChooser.setSelectedExtensionFilter(new ExtensionFilter("Text files", "*.txt"));
+        fileChooser.setInitialFileName("words.txt");
+        File chosen = fileChooser.showSaveDialog(stage);
+        
+        if (chosen != null) {
+            setBusy();
+            new Thread(() -> {
+                EntityManagerFactory emfactory = Persistence.createEntityManagerFactory(PERSISTENCE_UNIT);
+                EntityManager em = emfactory.createEntityManager();
+                em.getTransaction().begin();
+
+                ExportWords export = new CsvExportWords(em, new FetchWords(em));
+                export.export(chosen);
+
+                em.getTransaction().commit();
+                em.close();
+                emfactory.close();
+
+                Platform.runLater(() -> setReady());
             }).start();
         }
     }
