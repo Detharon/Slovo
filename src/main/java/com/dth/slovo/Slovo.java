@@ -6,7 +6,12 @@ import com.dth.service.EraseWords;
 import com.dth.service.ExportWords;
 import com.dth.service.FetchWords;
 import com.dth.service.SaveWords;
+import java.io.BufferedWriter;
 import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.OutputStreamWriter;
+import java.io.UnsupportedEncodingException;
 import java.util.Optional;
 import javafx.application.Application;
 import javafx.application.Platform;
@@ -242,8 +247,17 @@ public class Slovo extends Application {
                 EntityManager em = emfactory.createEntityManager();
                 em.getTransaction().begin();
 
-                ExportWords export = new CsvExportWords(em, new FetchWords(em));
-                export.export(chosen);
+                ExportWords export = null;
+                try {
+                    BufferedWriter writer = new BufferedWriter(
+                    new OutputStreamWriter(new FileOutputStream(chosen), "UTF-8"));
+                    
+                    export = new CsvExportWords(new FetchWords(em), writer);
+                    export.export();
+                    export.close();
+                } catch (UnsupportedEncodingException | FileNotFoundException ex) {
+                    // TODO handle these exceptions;
+                }
 
                 em.getTransaction().commit();
                 em.close();
