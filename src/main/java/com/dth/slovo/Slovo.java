@@ -52,20 +52,24 @@ public class Slovo extends Application {
     private static Label status;
     private static ProgressBar progressBar;
     
+    private static EntityManagerFactory emfactory;
+    
     @Override
     public void start(Stage primaryStage) {
         stage = primaryStage;
+        emfactory = Persistence.createEntityManagerFactory(PERSISTENCE_UNIT);
         createGUI();
         populateTable(1000, false);
 
         stage.setTitle("Slovo");
         stage.setScene(scene);
+        stage.setOnCloseRequest(WindowEvent -> {
+            emfactory.close();
+        });
+        
         stage.show();
     }
 
-    /**
-     * @param args the command line arguments
-     */
     public static void main(String[] args) {
         launch(args);
     }
@@ -192,7 +196,6 @@ public class Slovo extends Application {
                 DocumentProcessor documentProcessor = new DocumentProcessor(chosen);
                 documentProcessor.processFile();
                 
-                EntityManagerFactory emfactory = Persistence.createEntityManagerFactory(PERSISTENCE_UNIT);
                 EntityManager em = emfactory.createEntityManager();
                 em.getTransaction().begin();
                 
@@ -201,7 +204,6 @@ public class Slovo extends Application {
                         
                 em.getTransaction().commit();
                 em.close();
-                emfactory.close();
                 
                 Platform.runLater(() -> setReady());
                 populateTable(1000, false);
@@ -220,7 +222,6 @@ public class Slovo extends Application {
             setBusy();
             
             new Thread(() -> {
-                EntityManagerFactory emfactory = Persistence.createEntityManagerFactory(PERSISTENCE_UNIT);
                 EntityManager em = emfactory.createEntityManager();
                 em.getTransaction().begin();
 
@@ -229,7 +230,6 @@ public class Slovo extends Application {
 
                 em.getTransaction().commit();
                 em.close();
-                emfactory.close();
                 
                 Platform.runLater(() -> setReady());
                 populateTable(1000, false);
@@ -249,7 +249,6 @@ public class Slovo extends Application {
         if (chosen != null) {
             setBusy();
             new Thread(() -> {
-                EntityManagerFactory emfactory = Persistence.createEntityManagerFactory(PERSISTENCE_UNIT);
                 EntityManager em = emfactory.createEntityManager();
                 em.getTransaction().begin();
 
@@ -270,7 +269,6 @@ public class Slovo extends Application {
 
                 em.getTransaction().commit();
                 em.close();
-                emfactory.close();
 
                 Platform.runLater(() -> setReady());
             }).start();
@@ -307,7 +305,6 @@ public class Slovo extends Application {
                 w.setIgnored(!w.getIgnored());
             }
 
-            EntityManagerFactory emfactory = Persistence.createEntityManagerFactory(PERSISTENCE_UNIT);
             EntityManager em = emfactory.createEntityManager();
             em.getTransaction().begin();
 
@@ -316,7 +313,6 @@ public class Slovo extends Application {
 
             em.getTransaction().commit();
             em.close();
-            emfactory.close();
             
             tableView.getItems().removeAll(words);
             Platform.runLater(() -> setReady());
@@ -326,7 +322,6 @@ public class Slovo extends Application {
     public static void populateTable(int rows, boolean ignored) {
         setBusy();
         new Thread(() -> {
-            EntityManagerFactory emfactory = Persistence.createEntityManagerFactory(PERSISTENCE_UNIT);
             EntityManager em = emfactory.createEntityManager();
             em.getTransaction().begin();
 
@@ -339,7 +334,6 @@ public class Slovo extends Application {
 
             em.getTransaction().commit();
             em.close();
-            emfactory.close();
 
             Platform.runLater(() -> setReady());
         }).start();
