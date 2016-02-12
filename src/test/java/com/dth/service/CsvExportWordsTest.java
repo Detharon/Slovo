@@ -17,9 +17,9 @@ public class CsvExportWordsTest {
     
     @Before
     public void setUp() {
-        // FetchWordOccurrences mock
-        FetchWords fetchWords = mock(FetchWords.class);
-        when(fetchWords.execute(anyInt())).thenReturn(
+        // WordOccurrenceRepository mock
+        WordOccurrenceRepository wordRepo = mock(WordOccurrenceRepository.class);
+        when(wordRepo.fetchWords(anyInt())).thenReturn(
                 Arrays.asList(new WordOccurrence[]{
                     new WordOccurrence("word", 3),
                     new WordOccurrence("слово", 2),
@@ -31,7 +31,7 @@ public class CsvExportWordsTest {
         writer = mock(Writer.class);
         
         try {
-            export = new CsvExportWords(fetchWords, writer);
+            export = new CsvExportWords(wordRepo, writer);
             
             writer = mock(Writer.class);
             export.setWriter(writer);

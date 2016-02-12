@@ -6,14 +6,21 @@ import java.util.Optional;
 import javax.persistence.EntityManager;
 import javax.persistence.Query;
 
-public class SaveWords {
-    private EntityManager em;
+public class WordOccurrenceRepository {
+    protected EntityManager em;
     
-    public SaveWords(EntityManager em) {
+    public WordOccurrenceRepository(EntityManager em) {
         this.em = em;
     }
     
-    public void execute(List<WordOccurrence> wordOccurrences) {
+    public List fetchWords(int maxResults) {
+        Query query = em.createQuery("SELECT e FROM WordOccurrence e ORDER BY e.count DESC");
+        query.setMaxResults(maxResults);
+   
+        return query.getResultList();
+    }
+    
+    public void saveWords(List<WordOccurrence> wordOccurrences) {
         // It gets all the results, so it can possibly run out of memory.
         // Grabbing objects one by one takes too much time.
         // TODO: manual iterations with setFirstResult/setMaxResults
@@ -32,5 +39,10 @@ public class SaveWords {
                 em.merge(wordOccurrence);
             }
         }
+    }
+    
+    public void eraseAllWords() {
+        Query query = em.createQuery("DELETE FROM WordOccurrence");
+        query.executeUpdate();
     }
 }

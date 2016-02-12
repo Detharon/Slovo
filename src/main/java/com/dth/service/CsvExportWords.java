@@ -9,11 +9,11 @@ import java.util.List;
 
 public class CsvExportWords implements ExportWords {
     private final static String FORMAT = "%s,%d%n";
-    private FetchWords fw;
+    private WordOccurrenceRepository wordRepo;
     private Writer writer;
 
-    public CsvExportWords(FetchWords fw, Writer writer) throws UnsupportedEncodingException, FileNotFoundException {
-        this.fw = fw;
+    public CsvExportWords(WordOccurrenceRepository wordRepo, Writer writer) throws UnsupportedEncodingException, FileNotFoundException {
+        this.wordRepo = wordRepo;
         this.writer = writer;
     }
     
@@ -23,7 +23,7 @@ public class CsvExportWords implements ExportWords {
     
     @Override
     public void export(int count) {
-        List<WordOccurrence> words = fw.execute(count);
+        List<WordOccurrence> words = wordRepo.fetchWords(count);
 
         for (WordOccurrence w : words) {
             try {

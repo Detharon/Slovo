@@ -2,10 +2,8 @@ package com.dth.slovo;
 
 import com.dth.entity.WordOccurrence;
 import com.dth.service.CsvExportWords;
-import com.dth.service.EraseWords;
 import com.dth.service.ExportWords;
-import com.dth.service.FetchWords;
-import com.dth.service.SaveWords;
+import com.dth.service.WordOccurrenceRepository;
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -76,8 +74,8 @@ public class Slovo extends Application {
             EntityManager em = emfactory.createEntityManager();
             em.getTransaction().begin();
 
-            FetchWords query = new FetchWords(em);
-            tableView.setItems(FXCollections.observableList(query.execute(rows)));
+            WordOccurrenceRepository query = new WordOccurrenceRepository(em);
+            tableView.setItems(FXCollections.observableList(query.fetchWords(rows)));
 
             em.getTransaction().commit();
             em.close();
@@ -207,8 +205,8 @@ public class Slovo extends Application {
                 EntityManager em = emfactory.createEntityManager();
                 em.getTransaction().begin();
                 
-                SaveWords query = new SaveWords(em);
-                query.execute(documentProcessor.getWords());
+                WordOccurrenceRepository wordRepo = new WordOccurrenceRepository(em);
+                wordRepo.saveWords(documentProcessor.getWords());
                         
                 em.getTransaction().commit();
                 em.close();
@@ -235,8 +233,8 @@ public class Slovo extends Application {
                 EntityManager em = emfactory.createEntityManager();
                 em.getTransaction().begin();
 
-                EraseWords query = new EraseWords(em);
-                query.execute();
+                WordOccurrenceRepository wordRepo = new WordOccurrenceRepository(em);
+                wordRepo.eraseAllWords();
 
                 em.getTransaction().commit();
                 em.close();
@@ -269,7 +267,7 @@ public class Slovo extends Application {
                     BufferedWriter writer = new BufferedWriter(
                     new OutputStreamWriter(new FileOutputStream(chosen), "UTF-8"));
                     
-                    export = new CsvExportWords(new FetchWords(em), writer);
+                    export = new CsvExportWords(new WordOccurrenceRepository(em), writer);
                     export.export(1000);
                     export.close();
                 } catch (UnsupportedEncodingException | FileNotFoundException ex) {
