@@ -1,18 +1,21 @@
 package com.dth.service;
 
 import com.dth.entity.WordOccurrence;
-import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.io.UnsupportedEncodingException;
 import java.io.Writer;
 import java.util.List;
 
 public class CsvExportWords implements ExportWords {
-    private final static String FORMAT = "%s,%d%n";
+    private final String FORMAT;
     private final Writer writer;
+    
+    public CsvExportWords(Writer writer) {
+        this(writer, ",");
+    }
 
-    public CsvExportWords(Writer writer) throws UnsupportedEncodingException, FileNotFoundException {
+    public CsvExportWords(Writer writer, String delimiter) {
         this.writer = writer;
+        FORMAT = "%s"+delimiter+"%d%n";
     }
     
     @Override

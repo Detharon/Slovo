@@ -1,9 +1,7 @@
 package com.dth.service;
 
 import com.dth.entity.WordOccurrence;
-import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.io.UnsupportedEncodingException;
 import java.io.Writer;
 import java.util.Arrays;
 import java.util.List;
@@ -20,10 +18,7 @@ public class CsvExportWordsTest {
     public void setUp() {
         // Dummy writer object
         writer = mock(Writer.class);
-        
-        try {
-            export = new CsvExportWords(writer);
-        } catch (UnsupportedEncodingException | FileNotFoundException ex) {}
+        export = new CsvExportWords(writer);
     }
 
     @Test
