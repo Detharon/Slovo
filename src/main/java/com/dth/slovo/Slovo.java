@@ -94,12 +94,32 @@ public class Slovo extends Application {
     private static void createGUI() {
         // Menu bar
         MenuBar menuBar = new MenuBar();
+        root.setTop(menuBar);
         
+        createFileMenu(menuBar);
+        createDataMenu(menuBar);
+        
+        // Table
+        createTable();
+        root.setCenter(tableView);
+        
+        // Progress bar
+        status = new Label("Status: Ready");
+        progressBar = new ProgressBar(100);
+        
+        HBox hBox = new HBox(10);
+        hBox.setPadding(new Insets(5,5,5,5));
+        hBox.getChildren().addAll(status, progressBar);
+        
+        root.setBottom(hBox);
+    }
+    
+    private static void createFileMenu(MenuBar menuBar) {
         // File menu item
         Menu fileMenu = new Menu("File");
         MenuItem openMenuItem = new MenuItem("Open");
         openMenuItem.setOnAction((ActionEvent event) -> {
-            openButtonClicked();
+            openMenuItemClicked();
         });
         
         // Export menu item
@@ -108,18 +128,44 @@ public class Slovo extends Application {
             exportMenuItemClicked();
         });
         
+        // Exit menu item
         MenuItem exitMenuItem = new MenuItem("Exit");   
         exitMenuItem.setOnAction((ActionEvent event) -> {
             Platform.exit();
         });
         
-        menuBar.getMenus().add(fileMenu);
-
         fileMenu.getItems().addAll(openMenuItem, exportMenuItem, exitMenuItem);
         
-        root.setTop(menuBar);
+        menuBar.getMenus().add(fileMenu);
+    }
+    
+    private static void createDataMenu(MenuBar menuBar) {
+        // Erase all menu item
+        Menu dataMenu = new Menu("Data");
+        MenuItem eraseMenuItem = new MenuItem("Erase all");
+        eraseMenuItem.setOnAction((ActionEvent event) -> {
+            eraseAllMenuItemClicked();
+        });
         
-        // Table
+        
+        // Show words menu item
+        MenuItem refreshMenuItem = new MenuItem("Refresh");
+        refreshMenuItem.setOnAction((ActionEvent event) -> {
+            populateTable(1000);
+        });
+        
+        // Show ignore list menu item
+        MenuItem ignoreListMenuItem = new MenuItem("Ignore list");
+        ignoreListMenuItem.setOnAction((ActionEvent event) -> {
+            ignoreListMenuItemClicked();
+        });
+        
+        dataMenu.getItems().addAll(eraseMenuItem, refreshMenuItem, ignoreListMenuItem);
+        
+        menuBar.getMenus().add(dataMenu);
+    }
+    
+    private static void createTable() {
         tableView = new TableView();
         tableView.setPlaceholder(new Label("No words to show, open a new text file."));
         
@@ -139,42 +185,13 @@ public class Slovo extends Application {
         countCol.setCellValueFactory(new PropertyValueFactory("count"));
         
         tableView.getColumns().addAll(numCol, wordCol, countCol);
-        
-        root.setCenter(tableView);
-        
-        // Data menu
-        
-        Menu dataMenu = new Menu("Data");
-        MenuItem eraseMenuItem = new MenuItem("Erase all");
-        eraseMenuItem.setOnAction((ActionEvent event) -> {
-            eraseAllMenuItemClicked();
-        });
-        
-        MenuItem refreshMenuItem = new MenuItem("Refresh");
-        refreshMenuItem.setOnAction((ActionEvent event) -> {
-            populateTable(1000);
-        });
-        
-        dataMenu.getItems().addAll(eraseMenuItem, refreshMenuItem);
-        menuBar.getMenus().add(dataMenu);
-        
-        // Progress bar
-        status = new Label("Status: Ready");
-        progressBar = new ProgressBar(100);
-        
-        HBox hBox = new HBox();
-        hBox.setPadding(new Insets(5,5,5,5));
-        hBox.setSpacing(10);
-        hBox.getChildren().addAll(status, progressBar);
-        
-        root.setBottom(hBox);
     }
     
 // --------------------------------------------------
 // Menu events
 // --------------------------------------------------
     
-    private static void openButtonClicked() {
+    private static void openMenuItemClicked() {
         FileChooser fileChooser = new FileChooser();
         fileChooser.setTitle("Open Text File");
         fileChooser.setSelectedExtensionFilter(new ExtensionFilter("Text files", "*.txt"));
@@ -266,6 +283,10 @@ public class Slovo extends Application {
                 Platform.runLater(() -> setReady());
             }).start();
         }
+    }
+    
+    private static void ignoreListMenuItemClicked() {
+        
     }
     
 // --------------------------------------------------

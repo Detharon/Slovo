@@ -17,7 +17,7 @@ public class CsvExportWordsTest {
     
     @Before
     public void setUp() {
-        // FetchWords mock
+        // FetchWordOccurrences mock
         FetchWords fetchWords = mock(FetchWords.class);
         when(fetchWords.execute(anyInt())).thenReturn(
                 Arrays.asList(new WordOccurrence[]{
