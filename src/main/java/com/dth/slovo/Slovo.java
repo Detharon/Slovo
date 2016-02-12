@@ -30,6 +30,8 @@ import javafx.scene.control.ProgressBar;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 import javafx.scene.control.cell.PropertyValueFactory;
+import javafx.scene.input.KeyCode;
+import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.HBox;
 import javafx.stage.FileChooser;
@@ -54,7 +56,7 @@ public class Slovo extends Application {
     public void start(Stage primaryStage) {
         stage = primaryStage;
         createGUI();
-        populateTable(1000);
+        populateTable(1000, false);
 
         stage.setTitle("Slovo");
         stage.setScene(scene);
@@ -66,24 +68,6 @@ public class Slovo extends Application {
      */
     public static void main(String[] args) {
         launch(args);
-    }
-    
-    public static void populateTable(int rows) {
-        setBusy();
-        new Thread(() -> {
-            EntityManagerFactory emfactory = Persistence.createEntityManagerFactory(PERSISTENCE_UNIT);
-            EntityManager em = emfactory.createEntityManager();
-            em.getTransaction().begin();
-
-            WordOccurrenceRepository query = new WordOccurrenceRepository(em);
-            tableView.setItems(FXCollections.observableList(query.fetchWords(rows)));
-
-            em.getTransaction().commit();
-            em.close();
-            emfactory.close();
-            
-            Platform.runLater(() -> setReady());
-        }).start();
     }
     
 // --------------------------------------------------
@@ -148,9 +132,9 @@ public class Slovo extends Application {
         
         
         // Show words menu item
-        MenuItem refreshMenuItem = new MenuItem("Refresh");
-        refreshMenuItem.setOnAction((ActionEvent event) -> {
-            populateTable(1000);
+        MenuItem wordListMenuItem = new MenuItem("Word list");
+        wordListMenuItem.setOnAction((ActionEvent event) -> {
+            populateTable(1000, false);
         });
         
         // Show ignore list menu item
@@ -159,7 +143,7 @@ public class Slovo extends Application {
             ignoreListMenuItemClicked();
         });
         
-        dataMenu.getItems().addAll(eraseMenuItem, refreshMenuItem, ignoreListMenuItem);
+        dataMenu.getItems().addAll(eraseMenuItem, wordListMenuItem, ignoreListMenuItem);
         
         menuBar.getMenus().add(dataMenu);
     }
@@ -167,6 +151,12 @@ public class Slovo extends Application {
     private static void createTable() {
         tableView = new TableView();
         tableView.setPlaceholder(new Label("No words to show, open a new text file."));
+        
+        tableView.setOnKeyPressed((KeyEvent event) -> {
+            if (event.getCode() == KeyCode.DELETE) {
+                removeWords();
+            }
+        });
         
         TableColumn<WordOccurrence, Integer> numCol = new TableColumn("#");
         numCol.prefWidthProperty().bind(tableView.widthProperty().divide(6));
@@ -214,7 +204,7 @@ public class Slovo extends Application {
                 emfactory.close();
                 
                 Platform.runLater(() -> setReady());
-                populateTable(1000);
+                populateTable(1000, false);
             }).start();
         }
     }
@@ -242,7 +232,7 @@ public class Slovo extends Application {
                 emfactory.close();
                 
                 Platform.runLater(() -> setReady());
-                populateTable(1000);
+                populateTable(1000, false);
             }).start();
         }
     }
@@ -288,11 +278,11 @@ public class Slovo extends Application {
     }
     
     private static void ignoreListMenuItemClicked() {
-        
+        populateTable(1000, true);
     }
-    
+   
 // --------------------------------------------------
-// Status helpers
+// General helpers
 // --------------------------------------------------
     
     private static void setReady() {
@@ -303,5 +293,55 @@ public class Slovo extends Application {
     private static void setBusy() {
         status.setText("Status: Busy");
         progressBar.setProgress(-1);
+    }
+    
+    private static void removeWords() {
+        List<WordOccurrence> words = tableView.getSelectionModel().getSelectedItems();
+        if (words == null) {
+            return;
+        }
+
+        setBusy();
+        new Thread(() -> {
+            for (WordOccurrence w : words) {
+                w.setIgnored(!w.getIgnored());
+            }
+
+            EntityManagerFactory emfactory = Persistence.createEntityManagerFactory(PERSISTENCE_UNIT);
+            EntityManager em = emfactory.createEntityManager();
+            em.getTransaction().begin();
+
+            WordOccurrenceRepository wordRepo = new WordOccurrenceRepository(em);
+            wordRepo.updateWords(words);
+
+            em.getTransaction().commit();
+            em.close();
+            emfactory.close();
+            
+            tableView.getItems().removeAll(words);
+            Platform.runLater(() -> setReady());
+        }).start();
+    }
+
+    public static void populateTable(int rows, boolean ignored) {
+        setBusy();
+        new Thread(() -> {
+            EntityManagerFactory emfactory = Persistence.createEntityManagerFactory(PERSISTENCE_UNIT);
+            EntityManager em = emfactory.createEntityManager();
+            em.getTransaction().begin();
+
+            WordOccurrenceRepository query = new WordOccurrenceRepository(em);
+            if (!ignored) {
+                tableView.setItems(FXCollections.observableList(query.fetchWords(rows)));
+            } else {
+                tableView.setItems(FXCollections.observableList(query.fetchIgnoredWords(rows)));
+            }
+
+            em.getTransaction().commit();
+            em.close();
+            emfactory.close();
+
+            Platform.runLater(() -> setReady());
+        }).start();
     }
 }

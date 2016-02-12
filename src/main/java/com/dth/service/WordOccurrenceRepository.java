@@ -14,9 +14,18 @@ public class WordOccurrenceRepository {
     }
     
     public List fetchWords(int maxResults) {
-        Query query = em.createQuery("SELECT e FROM WordOccurrence e ORDER BY e.count DESC");
+        Query query = em.createQuery("SELECT e FROM WordOccurrence e "
+                + "WHERE e.ignored = false ORDER BY e.count DESC");
         query.setMaxResults(maxResults);
    
+        return query.getResultList();
+    }
+    
+    public List fetchIgnoredWords(int maxResults) {
+        Query query = em.createQuery("SELECT e FROM WordOccurrence e "
+                + "WHERE e.ignored = true ORDER BY e.count DESC");
+        
+        query.setMaxResults(maxResults);
         return query.getResultList();
     }
     
@@ -38,6 +47,12 @@ public class WordOccurrenceRepository {
             } else {
                 em.merge(wordOccurrence);
             }
+        }
+    }
+    
+    public void updateWords(List<WordOccurrence> words) {
+        for (WordOccurrence word : words) {
+            em.merge(word);
         }
     }
     

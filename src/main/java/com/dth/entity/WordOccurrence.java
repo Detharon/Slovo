@@ -22,17 +22,25 @@ public class WordOccurrence implements Serializable, Comparable<WordOccurrence> 
     @Column(name = "COUNT")
     private int count;
     
+    @Column(name = "IGNORED")
+    private boolean ignored;
+    
     public WordOccurrence() {
-        this("", 1);
+        this("", 1, false);
     }
     
     public WordOccurrence(String word) {
-        this(word, 1);
+        this(word, 1, false);
     }
     
     public WordOccurrence(String word, int count) {
+        this(word, count, false);
+    }
+    
+    public WordOccurrence(String word, int count, boolean ignored) {
         this.word = word;
         this.count = count;
+        this.ignored = ignored;
     }
 
     public Long getId() {
@@ -57,6 +65,14 @@ public class WordOccurrence implements Serializable, Comparable<WordOccurrence> 
     
     public void setCount(int count) {
         this.count = count;
+    }
+    
+    public boolean getIgnored() {
+        return ignored;
+    }
+    
+    public void setIgnored(boolean ignored) {
+        this.ignored = ignored;
     }
     
     public void incrementCount() {
