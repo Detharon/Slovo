@@ -27,6 +27,7 @@ import javafx.scene.control.Menu;
 import javafx.scene.control.MenuBar;
 import javafx.scene.control.MenuItem;
 import javafx.scene.control.ProgressBar;
+import javafx.scene.control.SelectionMode;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 import javafx.scene.control.cell.PropertyValueFactory;
@@ -155,6 +156,7 @@ public class Slovo extends Application {
     private static void createTable() {
         tableView = new TableView();
         tableView.setPlaceholder(new Label("No words to show, open a new text file."));
+        tableView.getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);
         
         tableView.setOnKeyPressed((KeyEvent event) -> {
             if (event.getCode() == KeyCode.DELETE) {
