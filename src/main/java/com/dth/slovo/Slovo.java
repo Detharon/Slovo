@@ -247,13 +247,13 @@ public class Slovo extends Application {
                 EntityManager em = emfactory.createEntityManager();
                 em.getTransaction().begin();
 
-                ExportWords export = null;
+                ExportWords export;
                 try {
                     BufferedWriter writer = new BufferedWriter(
                     new OutputStreamWriter(new FileOutputStream(chosen), "UTF-8"));
                     
                     export = new CsvExportWords(new FetchWords(em), writer);
-                    export.export();
+                    export.export(1000);
                     export.close();
                 } catch (UnsupportedEncodingException | FileNotFoundException ex) {
                     // TODO handle these exceptions;

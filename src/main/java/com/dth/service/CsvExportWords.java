@@ -22,8 +22,8 @@ public class CsvExportWords implements ExportWords {
     }
     
     @Override
-    public void export() {
-        List<WordOccurrence> words = fw.execute(1000);
+    public void export(int count) {
+        List<WordOccurrence> words = fw.execute(count);
 
         for (WordOccurrence w : words) {
             try {

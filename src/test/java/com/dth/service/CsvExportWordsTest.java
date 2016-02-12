@@ -40,7 +40,7 @@ public class CsvExportWordsTest {
 
     @Test
     public void writeAndClose() {
-        export.export();
+        export.export(1000);
         export.close();
         
         try {
