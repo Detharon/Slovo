@@ -10,6 +10,7 @@ import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.OutputStreamWriter;
 import java.io.UnsupportedEncodingException;
+import java.util.List;
 import java.util.Optional;
 import javafx.application.Application;
 import javafx.application.Platform;
@@ -267,8 +268,11 @@ public class Slovo extends Application {
                     BufferedWriter writer = new BufferedWriter(
                     new OutputStreamWriter(new FileOutputStream(chosen), "UTF-8"));
                     
-                    export = new CsvExportWords(new WordOccurrenceRepository(em), writer);
-                    export.export(1000);
+                    WordOccurrenceRepository wordRepo = new WordOccurrenceRepository(em);
+                    List<WordOccurrence> words = wordRepo.fetchWords(1000);
+                    
+                    export = new CsvExportWords(writer);
+                    export.export(words, 1000);
                     export.close();
                 } catch (UnsupportedEncodingException | FileNotFoundException ex) {
                     // TODO handle these exceptions;

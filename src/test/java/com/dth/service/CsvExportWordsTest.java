@@ -6,6 +6,7 @@ import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.io.Writer;
 import java.util.Arrays;
+import java.util.List;
 import org.junit.Before;
 import org.junit.Test;
 import static org.mockito.Mockito.*;
@@ -17,30 +18,17 @@ public class CsvExportWordsTest {
     
     @Before
     public void setUp() {
-        // WordOccurrenceRepository mock
-        WordOccurrenceRepository wordRepo = mock(WordOccurrenceRepository.class);
-        when(wordRepo.fetchWords(anyInt())).thenReturn(
-                Arrays.asList(new WordOccurrence[]{
-                    new WordOccurrence("word", 3),
-                    new WordOccurrence("слово", 2),
-                    new WordOccurrence("sucedió", 1),
-                })
-        );
-        
         // Dummy writer object
         writer = mock(Writer.class);
         
         try {
-            export = new CsvExportWords(wordRepo, writer);
-            
-            writer = mock(Writer.class);
-            export.setWriter(writer);
+            export = new CsvExportWords(writer);
         } catch (UnsupportedEncodingException | FileNotFoundException ex) {}
     }
 
     @Test
     public void writeAndClose() {
-        export.export(1000);
+        export.export(getTestWords(), 1000);
         export.close();
         
         try {
@@ -52,5 +40,11 @@ public class CsvExportWordsTest {
             ex.printStackTrace(System.out);
         }
     }
-    
+
+    private List getTestWords() {
+        return Arrays.asList(new WordOccurrence[]{
+            new WordOccurrence("word", 3),
+            new WordOccurrence("слово", 2),
+            new WordOccurrence("sucedió", 1),});
+    } 
 }

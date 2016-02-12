@@ -1,6 +1,9 @@
 package com.dth.service;
 
+import com.dth.entity.WordOccurrence;
+import java.util.List;
+
 public interface ExportWords {
-    public void export(int count);
+    public void export(List<WordOccurrence> words, int count);
     public void close();
 }

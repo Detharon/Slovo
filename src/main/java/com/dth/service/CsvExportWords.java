@@ -9,22 +9,14 @@ import java.util.List;
 
 public class CsvExportWords implements ExportWords {
     private final static String FORMAT = "%s,%d%n";
-    private WordOccurrenceRepository wordRepo;
-    private Writer writer;
+    private final Writer writer;
 
-    public CsvExportWords(WordOccurrenceRepository wordRepo, Writer writer) throws UnsupportedEncodingException, FileNotFoundException {
-        this.wordRepo = wordRepo;
-        this.writer = writer;
-    }
-    
-    public void setWriter(Writer writer) {
+    public CsvExportWords(Writer writer) throws UnsupportedEncodingException, FileNotFoundException {
         this.writer = writer;
     }
     
     @Override
-    public void export(int count) {
-        List<WordOccurrence> words = wordRepo.fetchWords(count);
-
+    public void export(List<WordOccurrence> words, int count) {
         for (WordOccurrence w : words) {
             try {
                 writer.write(String.format(FORMAT, w.getWord(), w.getCount()));
