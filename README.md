@@ -2,6 +2,8 @@
 
 A simple JavaFX application that counts word occurences in text files, backed up by an embedded database to store all the necessary data.
 
+Executable can be downloaded [here](https://www.dropbox.com/s/uqzo7255ly7ci31/slovo-0.11.jar?dl=0).
+
 # Usage
 
 Click on the File -> Open and choose the desired file. It will be automatically processed and the results will be stored.
