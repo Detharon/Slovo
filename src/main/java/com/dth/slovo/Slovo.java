@@ -331,7 +331,7 @@ public class Slovo extends Application {
             if (!ignored) {
                 tableView.setItems(FXCollections.observableList(query.fetchWords(rows)));
             } else {
-                tableView.setItems(FXCollections.observableList(query.fetchIgnoredWords(rows)));
+                tableView.setItems(FXCollections.observableList(query.fetchWords(rows, true)));
             }
 
             em.getTransaction().commit();
