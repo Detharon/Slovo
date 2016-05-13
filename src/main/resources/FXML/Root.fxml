@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import java.lang.*?>
+<?import java.util.*?>
+<?import javafx.scene.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<BorderPane xmlns:fx="http://javafx.com/fxml/1" fx:id="borderPane" prefHeight="250.0" prefWidth="300.0"
+            fx:controller="com.dth.controller.RootController">
+    
+    <top>
+        <MenuBar>
+            <menus>
+                <Menu text="File">
+                    <MenuItem text="Open" onAction="#openClicked"/>
+                    <MenuItem text="Export" onAction="#exportClicked"/>
+                    <MenuItem text="Exit" onAction="#exitClicked"/>
+                </Menu>
+                <Menu text="Data">
+                    <MenuItem text="Erase all" onAction="#eraseAllClicked"/>
+                    <MenuItem text="Word list" onAction="#wordListClicked"/>
+                    <MenuItem text="Ignore list" onAction="#ignoreListClicked"/>
+                </Menu>
+            </menus>
+        </MenuBar>
+    </top>
+    
+    <center>
+        <TableView fx:id="table" onKeyPressed="#tableKeyPressed"/>
+    </center>
+    
+    <bottom>
+        <HBox spacing='10'>
+            <padding>
+                <javafx.geometry.Insets top="5" bottom="5" left="5" right="5"/>
+            </padding>
+            <children>
+                <Label fx:id='status' text="Status: Ready"/>
+                <ProgressBar fx:id='progressBar' progress='100' maxWidth="Infinity" HBox.hgrow="ALWAYS"/>
+            </children>
+        </HBox>
+    </bottom>
+</BorderPane>
