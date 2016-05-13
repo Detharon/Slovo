@@ -184,30 +184,32 @@ public class RootController implements Initializable {
     // --------------------------------------------------
     
     @FXML
-    private void tableKeyPressed() {
-        List<WordOccurrence> words = table.getSelectionModel().getSelectedItems();
-        if (words == null) {
-            return;
-        }
-
-        setBusy();
-        new Thread(() -> {
-            for (WordOccurrence w : words) {
-                w.setIgnored(!w.getIgnored());
+    private void tableKeyPressed(KeyEvent event) {
+        if (event.getCode() == KeyCode.DELETE) {
+            List<WordOccurrence> words = table.getSelectionModel().getSelectedItems();
+            if (words == null) {
+                return;
             }
 
-            EntityManager em = emfactory.createEntityManager();
-            em.getTransaction().begin();
+            setBusy();
+            new Thread(() -> {
+                for (WordOccurrence w : words) {
+                    w.setIgnored(!w.getIgnored());
+                }
 
-            WordOccurrenceRepository wordRepo = new WordOccurrenceRepository(em);
-            wordRepo.updateWords(words);
+                EntityManager em = emfactory.createEntityManager();
+                em.getTransaction().begin();
 
-            em.getTransaction().commit();
-            em.close();
+                WordOccurrenceRepository wordRepo = new WordOccurrenceRepository(em);
+                wordRepo.updateWords(words);
 
-            table.getItems().removeAll(words);
-            Platform.runLater(() -> setReady());
-        }).start();
+                em.getTransaction().commit();
+                em.close();
+
+                table.getItems().removeAll(words);
+                Platform.runLater(() -> setReady());
+            }).start();
+        }
     }
     
     // --------------------------------------------------
@@ -223,33 +225,6 @@ public class RootController implements Initializable {
         status.setText("Status: Busy");
         progressBar.setProgress(-1);
     }
-
-    private void removeWords() {
-        List<WordOccurrence> words = table.getSelectionModel().getSelectedItems();
-        if (words == null) {
-            return;
-        }
-
-        setBusy();
-        new Thread(() -> {
-            for (WordOccurrence w : words) {
-                w.setIgnored(!w.getIgnored());
-            }
-
-            EntityManager em = emfactory.createEntityManager();
-            em.getTransaction().begin();
-
-            WordOccurrenceRepository wordRepo = new WordOccurrenceRepository(em);
-            wordRepo.updateWords(words);
-
-            em.getTransaction().commit();
-            em.close();
-
-            table.getItems().removeAll(words);
-            Platform.runLater(() -> setReady());
-        }).start();
-    }
-
     public void populateTable(int rows, boolean ignored) {
         setBusy();
         new Thread(() -> {
@@ -273,12 +248,6 @@ public class RootController implements Initializable {
     private void createTable() {
         table.setPlaceholder(new Label("No words to show, open a new text file."));
         table.getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);
-        
-        table.setOnKeyPressed((KeyEvent event) -> {
-            if (event.getCode() == KeyCode.DELETE) {
-                removeWords();
-            }
-        });
         
         TableColumn<WordOccurrence, Integer> numCol = new TableColumn("#");
         numCol.prefWidthProperty().bind(table.widthProperty().divide(6));
