@@ -13,6 +13,7 @@
         <MenuBar>
             <menus>
                 <Menu text="File">
+                    <MenuItem text="Preferences" onAction="#preferencesClicked"/>
                     <MenuItem text="Open" onAction="#openClicked"/>
                     <MenuItem text="Export" onAction="#exportClicked"/>
                     <MenuItem text="Exit" onAction="#exitClicked"/>

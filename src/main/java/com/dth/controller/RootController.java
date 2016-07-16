@@ -10,17 +10,22 @@ import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
+import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.io.UnsupportedEncodingException;
 import java.net.URL;
 import java.util.List;
 import java.util.Optional;
 import java.util.ResourceBundle;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javafx.application.Platform;
 import javafx.beans.property.ReadOnlyObjectWrapper;
 import javafx.collections.FXCollections;
 import javafx.fxml.FXML;
+import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
+import javafx.scene.Scene;
 import javafx.scene.control.Alert;
 import javafx.scene.control.ButtonType;
 import javafx.scene.control.Label;
@@ -29,6 +34,7 @@ import javafx.scene.control.SelectionMode;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 import javafx.scene.control.cell.PropertyValueFactory;
+import javafx.scene.image.Image;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
 import javafx.stage.FileChooser;
@@ -70,6 +76,20 @@ public class RootController implements Initializable {
     // --------------------------------------------------
     
     @FXML
+    private void preferencesClicked() {
+        try {
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/FXML/Preferences.fxml"));
+            Stage preferencesStage = new Stage();
+            preferencesStage.setTitle("Preferences");
+            preferencesStage.setScene(new Scene(loader.load()));
+            preferencesStage.getIcons().add(new Image(getClass().getResourceAsStream("/icons/icon.png")));
+            preferencesStage.show();
+        } catch (IOException ex) {
+            Logger.getLogger(RootController.class.getName()).log(Level.SEVERE, null, ex);
+        }
+    }
+    
+    @FXML
     private void openClicked() {
         FileChooser fileChooser = new FileChooser();
         fileChooser.setTitle("Open Text File");
@@ -99,7 +119,7 @@ public class RootController implements Initializable {
     }
     
     @FXML
-    private void exportClicked() {
+    private void exportClicked() {       
         FileChooser fileChooser = new FileChooser();
         fileChooser.setTitle("Select file to save");
         fileChooser.setSelectedExtensionFilter(new FileChooser.ExtensionFilter("Text files", "*.txt"));

@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import java.lang.*?>
+<?import java.util.*?>
+<?import javafx.scene.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<AnchorPane xmlns:fx="http://javafx.com/fxml/1" fx:id="AnchorPane" prefHeight="300.0" prefWidth="300.0"
+            fx:controller="com.dth.controller.PreferencesController">
+    
+    <Button text="Save" AnchorPane.leftAnchor="5" AnchorPane.topAnchor="5" onAction="#saveClicked"/>
+    
+</AnchorPane>
