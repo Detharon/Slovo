@@ -1,6 +1,8 @@
 package com.dth.slovo;
 
+import com.dth.util.DefaultDocumentProcessor;
 import com.dth.entity.WordOccurrence;
+import com.dth.util.DefaultWordProcessor;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -8,10 +10,10 @@ import java.net.URISyntaxException;
 import java.util.HashSet;
 import java.util.Properties;
 import java.util.Set;
-import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.*;
 import org.junit.Test;
 import org.junit.BeforeClass;
+import static org.hamcrest.CoreMatchers.is;
 
 public class DocumentProcessorTest {
     private static final String ENGLISH_SIMPLE = "EnglishSimple";
@@ -24,7 +26,8 @@ public class DocumentProcessorTest {
     
     @Test
     public void processEnglishSimple() {
-        DocumentProcessor documentProcessor = new DocumentProcessor(file);        
+        DefaultDocumentProcessor documentProcessor =
+                new DefaultDocumentProcessor(file, new DefaultWordProcessor());        
         documentProcessor.processFile();
         
         Set<WordOccurrence> resultWords = new HashSet<>(documentProcessor.getWords());        

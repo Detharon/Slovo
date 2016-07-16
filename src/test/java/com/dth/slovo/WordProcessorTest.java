@@ -1,5 +1,6 @@
 package com.dth.slovo;
 
+import com.dth.util.DefaultWordProcessor;
 import static org.junit.Assert.assertEquals;
 
 import java.util.Arrays;
@@ -38,7 +39,7 @@ public class WordProcessorTest {
     
     @Test
     public void testProcessWord() {
-        WordProcessor wp = new WordProcessor();
+        DefaultWordProcessor wp = new DefaultWordProcessor();
         assertEquals(expected, wp.processWord(result));
     }
 }

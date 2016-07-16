@@ -4,7 +4,8 @@ import com.dth.entity.WordOccurrence;
 import com.dth.service.CsvExportWords;
 import com.dth.service.ExportWords;
 import com.dth.service.WordOccurrenceRepository;
-import com.dth.slovo.DocumentProcessor;
+import com.dth.util.DefaultDocumentProcessor;
+import com.dth.util.DefaultWordProcessor;
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -78,7 +79,8 @@ public class RootController implements Initializable {
         if (chosen != null) {
             setBusy();
             new Thread(() -> {
-                DocumentProcessor documentProcessor = new DocumentProcessor(chosen);
+                DefaultDocumentProcessor documentProcessor =
+                        new DefaultDocumentProcessor(chosen, new DefaultWordProcessor());
                 documentProcessor.processFile();
                 
                 EntityManager em = emfactory.createEntityManager();

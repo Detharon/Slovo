@@ -1,7 +1,7 @@
-package com.dth.slovo;
+package com.dth.util;
 
 /**
- * WordProcessor is a small class that normalizes the {@code String}
+ * DefaultWordProcessor is a small class that normalizes the {@code String}
  * by altering it in numerous ways, so that the resulting {@code String}
  * will only contain a sequence of alphabetic characters.
  * 
@@ -14,7 +14,7 @@ package com.dth.slovo;
  *     String c = processor.processWord(" HaPPy!");
  * </blockquote>
  */
-public class WordProcessor {
+public class DefaultWordProcessor implements WordProcessor<String> {
 
     /**
      * Processes the {@code String} by subjecting it to the
@@ -31,6 +31,7 @@ public class WordProcessor {
      *          at least one alphabetic character. Otherwise returns
      *          an empty {@code String}.
      */
+    @Override
     public String processWord(String word) {
         // Initialize the StringBuilder and trim the string
         StringBuilder temp = new StringBuilder(word.trim());
