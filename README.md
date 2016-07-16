@@ -12,5 +12,5 @@ Afterwards, either remove the data, or combine it with new text files.
 
 # License
 
-This project available under the MIT License.
+This project is available under the MIT License.
 
