@@ -79,7 +79,7 @@ public class DefaultDocumentProcessor implements DocumentProcessor {
                 
                 for (Object temp : tempWords) {
                     temp = processor.processWord(temp);
-                    if (temp == null) {
+                    if (temp.toString().equals("")) {
                         continue;
                     }
 

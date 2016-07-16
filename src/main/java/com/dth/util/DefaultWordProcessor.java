@@ -36,32 +36,21 @@ public class DefaultWordProcessor implements WordProcessor<String> {
         // Initialize the StringBuilder and trim the string
         StringBuilder temp = new StringBuilder(word.trim());
 
-        // If it's empty, return null
-        if (temp.length() == 0) {
-            return null;
-        }
-
         // Remove leading punctuation marks               
         while (temp.length() > 0 && !Character.isAlphabetic(temp.charAt(0))) {
             temp.deleteCharAt(0);
-        }
-        if (temp.length() == 0) {
-            return null;
         }
 
         // Remove trailing punctuation marks  
         while (temp.length() > 0 && !Character.isAlphabetic(temp.charAt(temp.length() - 1))) {
             temp.deleteCharAt(temp.length() - 1);
         }
-        if (temp.length() == 0) {
-            return null;
-        }
 
         // To lowercase
         for (int i = 0; i < temp.length(); i++) {
             temp.setCharAt(i, Character.toLowerCase(temp.charAt(i)));
         }
-
+        
         return temp.toString();
     }
 }

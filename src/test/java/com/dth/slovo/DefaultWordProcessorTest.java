@@ -1,7 +1,6 @@
 package com.dth.slovo;
 
 import com.dth.util.DefaultWordProcessor;
-import static org.junit.Assert.assertEquals;
 
 import java.util.Arrays;
 import java.util.Collection;
@@ -9,9 +8,10 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 import org.junit.runners.Parameterized.Parameters;
+import static org.junit.Assert.assertEquals;
 
 @RunWith(Parameterized.class)
-public class WordProcessorTest {
+public class DefaultWordProcessorTest {
     private final String expected;
     private final String result;
 
@@ -26,13 +26,13 @@ public class WordProcessorTest {
             {"word", "word."},
             {"word", "_word_"},
             {"qué", "¿QUÉ?"},
-            {null, "."},
-            {null, ""},
-            {null, "    "}            
+            {"", "."},
+            {"", ""},
+            {"", "    "}            
         });
     }
     
-    public WordProcessorTest(String expected, String result) {
+    public DefaultWordProcessorTest(String expected, String result) {
         this.expected = expected;
         this.result = result;
     }
