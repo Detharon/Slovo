@@ -47,36 +47,35 @@ public class RootController implements Initializable {
 
     private final EntityManagerFactory emfactory = Persistence.createEntityManagerFactory("SlovoPU");
     private Stage stage;
-    
+
     @FXML
     private TableView table;
-    
+
     @FXML
     private ProgressBar progressBar;
-    
+
     @FXML
     private Label status;
-    
+
     public void setStage(Stage stage) {
         this.stage = stage;
     }
-    
+
     public void close() {
         emfactory.close();
     }
-    
+
     @Override
     public void initialize(URL location, ResourceBundle resources) {
         createTable();
         populateTable(1000, false);
     }
-    
+
     // --------------------------------------------------
     // File menu
     // --------------------------------------------------
-    
     @FXML
-    private void preferencesClicked() {
+    public void preferencesClicked() {
         try {
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/FXML/Preferences.fxml"));
             Stage preferencesStage = new Stage();
@@ -88,44 +87,44 @@ public class RootController implements Initializable {
             Logger.getLogger(RootController.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
-    
+
     @FXML
-    private void openClicked() {
+    public void openClicked() {
         FileChooser fileChooser = new FileChooser();
         fileChooser.setTitle("Open Text File");
         fileChooser.setSelectedExtensionFilter(new FileChooser.ExtensionFilter("Text files", "*.txt"));
         File chosen = fileChooser.showOpenDialog(stage);
-        
+
         if (chosen != null) {
             setBusy();
             new Thread(() -> {
-                DefaultDocumentProcessor documentProcessor =
-                        new DefaultDocumentProcessor(chosen, new DefaultWordProcessor());
+                DefaultDocumentProcessor documentProcessor
+                        = new DefaultDocumentProcessor(chosen, new DefaultWordProcessor());
                 documentProcessor.processFile();
-                
+
                 EntityManager em = emfactory.createEntityManager();
                 em.getTransaction().begin();
-                
+
                 WordOccurrenceRepository wordRepo = new WordOccurrenceRepository(em);
                 wordRepo.saveWords(documentProcessor.getWords());
-                        
+
                 em.getTransaction().commit();
                 em.close();
-                
+
                 Platform.runLater(() -> setReady());
                 populateTable(1000, false);
             }).start();
         }
     }
-    
+
     @FXML
-    private void exportClicked() {       
+    public void exportClicked() {
         FileChooser fileChooser = new FileChooser();
         fileChooser.setTitle("Select file to save");
         fileChooser.setSelectedExtensionFilter(new FileChooser.ExtensionFilter("Text files", "*.txt"));
         fileChooser.setInitialFileName("words.txt");
         File chosen = fileChooser.showSaveDialog(stage);
-        
+
         if (chosen != null) {
             setBusy();
             new Thread(() -> {
@@ -135,11 +134,11 @@ public class RootController implements Initializable {
                 ExportWords export;
                 try {
                     BufferedWriter writer = new BufferedWriter(
-                    new OutputStreamWriter(new FileOutputStream(chosen), "UTF-8"));
-                    
+                            new OutputStreamWriter(new FileOutputStream(chosen), "UTF-8"));
+
                     WordOccurrenceRepository wordRepo = new WordOccurrenceRepository(em);
                     List<WordOccurrence> words = wordRepo.fetchWords(1000);
-                    
+
                     export = new CsvExportWords(writer);
                     export.export(words, 1000);
                     export.close();
@@ -156,35 +155,34 @@ public class RootController implements Initializable {
     }
 
     @FXML
-    private void exitClicked() {
+    public void exitClicked() {
         Platform.exit();
     }
-    
+
     // --------------------------------------------------
     // Data menu
     // --------------------------------------------------
-    
     @FXML
-    private void ignoreListClicked() {
+    public void ignoreListClicked() {
         populateTable(1000, true);
     }
-    
+
     @FXML
-    private void wordListClicked() {
+    public void wordListClicked() {
         populateTable(1000, false);
     }
-    
+
     @FXML
-    private void eraseAllClicked() {
+    public void eraseAllClicked() {
         Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
         alert.setTitle("Confirmation");
         alert.setContentText("Are you sure you want to remove all data?"
-                + "\nThis operation is irreversible.");  
-        
+                + "\nThis operation is irreversible.");
+
         Optional<ButtonType> result = alert.showAndWait();
-        if (result.get() == ButtonType.OK){
+        if (result.get() == ButtonType.OK) {
             setBusy();
-            
+
             new Thread(() -> {
                 EntityManager em = emfactory.createEntityManager();
                 em.getTransaction().begin();
@@ -194,19 +192,18 @@ public class RootController implements Initializable {
 
                 em.getTransaction().commit();
                 em.close();
-                
+
                 Platform.runLater(() -> setReady());
                 populateTable(1000, false);
             }).start();
         }
     }
-    
+
     // --------------------------------------------------
     // Table
     // --------------------------------------------------
-    
     @FXML
-    private void tableKeyPressed(KeyEvent event) {
+    public void tableKeyPressed(KeyEvent event) {
         if (event.getCode() == KeyCode.DELETE) {
             List<WordOccurrence> words = table.getSelectionModel().getSelectedItems();
             if (words == null) {
@@ -233,11 +230,10 @@ public class RootController implements Initializable {
             }).start();
         }
     }
-    
+
     // --------------------------------------------------
     // General helpers
     // --------------------------------------------------
-    
     private void setReady() {
         status.setText("Status: Ready");
         progressBar.setProgress(100);
@@ -247,6 +243,7 @@ public class RootController implements Initializable {
         status.setText("Status: Busy");
         progressBar.setProgress(-1);
     }
+
     public void populateTable(int rows, boolean ignored) {
         setBusy();
         new Thread(() -> {
@@ -266,26 +263,26 @@ public class RootController implements Initializable {
             Platform.runLater(() -> setReady());
         }).start();
     }
-    
+
     private void createTable() {
         table.setPlaceholder(new Label("No words to show, open a new text file."));
         table.getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);
-        
+
         TableColumn<WordOccurrence, Integer> numCol = new TableColumn("#");
         numCol.prefWidthProperty().bind(table.widthProperty().divide(6));
         numCol.setSortable(false);
         numCol.setCellValueFactory(c
                 -> new ReadOnlyObjectWrapper<>(
                         table.getItems().indexOf(c.getValue())));
-        
+
         TableColumn<WordOccurrence, String> wordCol = new TableColumn("Word");
         wordCol.prefWidthProperty().bind(table.widthProperty().divide(6).multiply(3));
         wordCol.setCellValueFactory(new PropertyValueFactory("word"));
-        
+
         TableColumn<WordOccurrence, Integer> countCol = new TableColumn("Count");
         countCol.prefWidthProperty().bind(table.widthProperty().divide(6).multiply(2));
         countCol.setCellValueFactory(new PropertyValueFactory("count"));
-        
+
         table.getColumns().addAll(numCol, wordCol, countCol);
     }
 }

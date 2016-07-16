@@ -13,7 +13,7 @@ public class PreferencesController implements Initializable {
     }
 
     @FXML
-    private void saveClicked() {
+    public void saveClicked() {
         System.out.println("Click");
     }
 
