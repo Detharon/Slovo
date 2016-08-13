@@ -4,6 +4,8 @@ import com.dth.entity.WordOccurrence;
 import com.dth.service.CsvExportWords;
 import com.dth.service.ExportWords;
 import com.dth.service.WordOccurrenceRepository;
+import com.dth.slovo.properties.PropertiesAccessor;
+import com.dth.slovo.properties.SlovoProperties;
 import com.dth.util.DefaultDocumentProcessor;
 import com.dth.util.DefaultWordProcessor;
 import java.io.BufferedWriter;
@@ -13,10 +15,8 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.io.UnsupportedEncodingException;
-import java.net.URL;
 import java.util.List;
 import java.util.Optional;
-import java.util.ResourceBundle;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javafx.application.Platform;
@@ -24,7 +24,6 @@ import javafx.beans.property.ReadOnlyObjectWrapper;
 import javafx.collections.FXCollections;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
-import javafx.fxml.Initializable;
 import javafx.scene.Scene;
 import javafx.scene.control.Alert;
 import javafx.scene.control.ButtonType;
@@ -43,9 +42,11 @@ import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
 import javax.persistence.Persistence;
 
-public class RootController implements Initializable {
+public class RootController {
 
     private final EntityManagerFactory emfactory = Persistence.createEntityManagerFactory("SlovoPU");
+
+    private PropertiesAccessor<SlovoProperties> propertiesAccessor;
     private Stage stage;
 
     @FXML
@@ -57,18 +58,26 @@ public class RootController implements Initializable {
     @FXML
     private Label status;
 
-    public void setStage(Stage stage) {
-        this.stage = stage;
-    }
-
     public void close() {
         emfactory.close();
     }
 
-    @Override
-    public void initialize(URL location, ResourceBundle resources) {
+    @FXML
+    public void initialize() {
+        propertiesAccessor = new PropertiesAccessor<>(new SlovoProperties());
+
+        try {
+            propertiesAccessor.load();
+        } catch (IOException ex) {
+            // TODO: message
+        }
+
         createTable();
-        populateTable(1000, false);
+        populateTable(propertiesAccessor.getProperties().getNumberOfWords(), false);
+    }
+
+    public void setStage(Stage stage) {
+        this.stage = stage;
     }
 
     // --------------------------------------------------
@@ -83,6 +92,9 @@ public class RootController implements Initializable {
             preferencesStage.setScene(new Scene(loader.load()));
             preferencesStage.getIcons().add(new Image(getClass().getResourceAsStream("/icons/icon.png")));
             preferencesStage.show();
+            preferencesStage.setOnHiding(e -> {
+                refresh();
+            });
         } catch (IOException ex) {
             Logger.getLogger(RootController.class.getName()).log(Level.SEVERE, null, ex);
         }
@@ -112,7 +124,7 @@ public class RootController implements Initializable {
                 em.close();
 
                 Platform.runLater(() -> setReady());
-                populateTable(1000, false);
+                populateTable(propertiesAccessor.getProperties().getNumberOfWords(), false);
             }).start();
         }
     }
@@ -140,7 +152,7 @@ public class RootController implements Initializable {
                     List<WordOccurrence> words = wordRepo.fetchWords(1000);
 
                     export = new CsvExportWords(writer);
-                    export.export(words, 1000);
+                    export.export(words, propertiesAccessor.getProperties().getNumberOfWords());
                     export.close();
                 } catch (UnsupportedEncodingException | FileNotFoundException ex) {
                     // TODO handle these exceptions;
@@ -164,12 +176,12 @@ public class RootController implements Initializable {
     // --------------------------------------------------
     @FXML
     public void ignoreListClicked() {
-        populateTable(1000, true);
+        populateTable(propertiesAccessor.getProperties().getNumberOfWords(), true);
     }
 
     @FXML
     public void wordListClicked() {
-        populateTable(1000, false);
+        populateTable(propertiesAccessor.getProperties().getNumberOfWords(), false);
     }
 
     @FXML
@@ -194,7 +206,7 @@ public class RootController implements Initializable {
                 em.close();
 
                 Platform.runLater(() -> setReady());
-                populateTable(1000, false);
+                populateTable(propertiesAccessor.getProperties().getNumberOfWords(), false);
             }).start();
         }
     }
@@ -244,7 +256,7 @@ public class RootController implements Initializable {
         progressBar.setProgress(-1);
     }
 
-    public void populateTable(int rows, boolean ignored) {
+    private void populateTable(int rows, boolean ignored) {
         setBusy();
         new Thread(() -> {
             EntityManager em = emfactory.createEntityManager();
@@ -273,7 +285,7 @@ public class RootController implements Initializable {
         numCol.setSortable(false);
         numCol.setCellValueFactory(c
                 -> new ReadOnlyObjectWrapper<>(
-                        table.getItems().indexOf(c.getValue())));
+                        1 + table.getItems().indexOf(c.getValue())));
 
         TableColumn<WordOccurrence, String> wordCol = new TableColumn("Word");
         wordCol.prefWidthProperty().bind(table.widthProperty().divide(6).multiply(3));
@@ -284,5 +296,15 @@ public class RootController implements Initializable {
         countCol.setCellValueFactory(new PropertyValueFactory("count"));
 
         table.getColumns().addAll(numCol, wordCol, countCol);
+    }
+    
+    private void refresh() {
+        try {
+            propertiesAccessor.load();
+        } catch (IOException ex) {
+            // TODO: message
+        }
+        
+        populateTable(propertiesAccessor.getProperties().getNumberOfWords(), false);
     }
 }
