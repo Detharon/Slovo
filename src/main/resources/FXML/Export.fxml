@@ -8,22 +8,30 @@
 <?import javafx.scene.layout.*?>
 
 <BorderPane xmlns:fx="http://javafx.com/fxml/1"
-            prefHeight="300.0" prefWidth="300.0"
-            fx:controller="com.dth.controller.PreferencesController">
+            prefHeight="150.0" prefWidth="300.0" 
+            fx:controller="com.dth.controller.ExportController">
     
     <center>
-        <GridPane hgap="10" vgap="10" >
+        <GridPane hgap="10" vgap="10">
             <padding>
                 <Insets left="5" right="5" top="10" bottom="10"/>
             </padding>
 
             <!-- First row -->
-            <Label text="Number of words" GridPane.columnIndex="0" GridPane.rowIndex="0">
+            <Label text="Export as" GridPane.columnIndex="0" GridPane.rowIndex="0">
                 <tooltip>
                     <Tooltip text="The number of words displayed in the table"/>
                 </tooltip>
             </Label>
-            <TextField fx:id="numberOfWords" GridPane.columnIndex="1" GridPane.rowIndex="0" GridPane.columnSpan="2"/>
+            <ComboBox fx:id="exportMode" GridPane.columnIndex="1" GridPane.rowIndex="0"/>
+            
+            <!-- Second row -->
+            <Label text="Encoding" GridPane.columnIndex="0" GridPane.rowIndex="1">
+                <tooltip>
+                    <Tooltip text="Encoding used."/>
+                </tooltip>
+            </Label>
+            <ComboBox fx:id="encoding" GridPane.columnIndex="1" GridPane.rowIndex="1"/>
         </GridPane>
     </center>
     
@@ -33,7 +41,7 @@
                 <Insets top="5" bottom="5" left="5" right="5"/>
             </padding>
             
-            <Button text="Save" onAction="#saveClicked" />
+            <Button text="Export" onAction="#exportClicked"/>
             <Button text="Cancel" onAction="#cancelClicked"/>
         </HBox>
     </bottom>

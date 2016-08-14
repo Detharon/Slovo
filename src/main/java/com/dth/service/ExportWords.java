@@ -4,6 +4,5 @@ import com.dth.entity.WordOccurrence;
 import java.util.List;
 
 public interface ExportWords {
-    public void export(List<WordOccurrence> words, int count);
-    public void close();
+    public void export(List<WordOccurrence> words) throws ExportFailedException;
 }

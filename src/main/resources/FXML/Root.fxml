@@ -13,9 +13,12 @@
         <MenuBar>
             <menus>
                 <Menu text="File">
-                    <MenuItem text="Preferences" onAction="#preferencesClicked"/>
-                    <MenuItem text="Open" onAction="#openClicked"/>
-                    <MenuItem text="Export" onAction="#exportClicked"/>
+                    <MenuItem text="Preferences..." onAction="#preferencesClicked"/>
+                    <MenuItem text="Open..." onAction="#openClicked"/>
+                    <SeparatorMenuItem/>
+                    <MenuItem text="Import..." onAction="#importClicked"/>
+                    <MenuItem text="Export..." onAction="#exportClicked"/>
+                    <SeparatorMenuItem/>
                     <MenuItem text="Exit" onAction="#exitClicked"/>
                 </Menu>
                 <Menu text="Data">

@@ -1,20 +1,13 @@
 package com.dth.controller;
 
 import com.dth.entity.WordOccurrence;
-import com.dth.service.CsvExportWords;
-import com.dth.service.ExportWords;
 import com.dth.service.WordOccurrenceRepository;
 import com.dth.slovo.properties.PropertiesAccessor;
 import com.dth.slovo.properties.SlovoProperties;
 import com.dth.util.DefaultDocumentProcessor;
 import com.dth.util.DefaultWordProcessor;
-import java.io.BufferedWriter;
 import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.OutputStreamWriter;
-import java.io.UnsupportedEncodingException;
 import java.util.List;
 import java.util.Optional;
 import java.util.logging.Level;
@@ -128,41 +121,25 @@ public class RootController {
             }).start();
         }
     }
+    
+    @FXML
+    public void importClicked() {
+        
+    }
 
     @FXML
     public void exportClicked() {
-        FileChooser fileChooser = new FileChooser();
-        fileChooser.setTitle("Select file to save");
-        fileChooser.setSelectedExtensionFilter(new FileChooser.ExtensionFilter("Text files", "*.txt"));
-        fileChooser.setInitialFileName("words.txt");
-        File chosen = fileChooser.showSaveDialog(stage);
-
-        if (chosen != null) {
-            setBusy();
-            new Thread(() -> {
-                EntityManager em = emfactory.createEntityManager();
-                em.getTransaction().begin();
-
-                ExportWords export;
-                try {
-                    BufferedWriter writer = new BufferedWriter(
-                            new OutputStreamWriter(new FileOutputStream(chosen), "UTF-8"));
-
-                    WordOccurrenceRepository wordRepo = new WordOccurrenceRepository(em);
-                    List<WordOccurrence> words = wordRepo.fetchWords(1000);
-
-                    export = new CsvExportWords(writer);
-                    export.export(words, propertiesAccessor.getProperties().getNumberOfWords());
-                    export.close();
-                } catch (UnsupportedEncodingException | FileNotFoundException ex) {
-                    // TODO handle these exceptions;
-                }
-
-                em.getTransaction().commit();
-                em.close();
-
-                Platform.runLater(() -> setReady());
-            }).start();
+        try {
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/FXML/Export.fxml"));
+            Stage exportStage = new Stage();
+            exportStage.setTitle("Export words");
+            exportStage.setScene(new Scene(loader.load()));
+            exportStage.getIcons().add(new Image(getClass().getResourceAsStream("/icons/icon.png")));
+            exportStage.show();
+            ExportController controller = loader.getController();
+            controller.setEntityManagerFactory(emfactory);
+        } catch (IOException ex) {
+            //TODO: exception
         }
     }
 
