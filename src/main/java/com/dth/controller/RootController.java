@@ -133,7 +133,11 @@ public class RootController {
 
                 // Splitting document into sentences
                 DefaultDocumentProcessor documentProcessor = new DefaultDocumentProcessor();
-                documentProcessor.processDocument(document);
+                try {
+                    documentProcessor.processDocument(document);
+                } catch (IOException ex) {
+                    LOG.log(Level.SEVERE, "Failed to read sentences from a file.", ex);
+                }
                 List<Sentence> sentences = documentProcessor.getSentences();
 
                 // Generating words
@@ -180,7 +184,7 @@ public class RootController {
             ImportController controller = loader.getController();
             controller.setEntityManagerFactory(emfactory);
         } catch (IOException ex) {
-            //TODO: exception
+            LOG.log(Level.SEVERE, "Failed to load the Import.fxml controller.", ex);
         }
     }
 
@@ -196,7 +200,7 @@ public class RootController {
             ExportController controller = loader.getController();
             controller.setEntityManagerFactory(emfactory);
         } catch (IOException ex) {
-            //TODO: exception
+            LOG.log(Level.SEVERE, "Failed to load the Export.fxml controller.", ex);
         }
     }
 
