@@ -1,11 +1,15 @@
 package com.dth.controller;
 
+import com.dth.entity.Sentence;
 import com.dth.entity.WordOccurrence;
+import com.dth.service.SentenceRepository;
 import com.dth.service.WordOccurrenceRepository;
 import com.dth.slovo.properties.PropertiesAccessor;
 import com.dth.slovo.properties.SlovoProperties;
 import com.dth.util.DefaultDocumentProcessor;
+import com.dth.util.DefaultSentenceProcessor;
 import com.dth.util.DefaultWordProcessor;
+import com.dth.util.SentenceProcessor;
 import java.io.File;
 import java.io.IOException;
 import java.util.List;
@@ -29,13 +33,18 @@ import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.image.Image;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
+import javafx.scene.layout.BorderPane;
+import javafx.scene.layout.Pane;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
+import javafx.stage.WindowEvent;
 import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
 import javax.persistence.Persistence;
 
 public class RootController {
+
+    private static final Logger LOG = Logger.getLogger(RootController.class.getName());
 
     private final EntityManagerFactory emfactory = Persistence.createEntityManagerFactory("SlovoPU");
 
@@ -43,7 +52,13 @@ public class RootController {
     private Stage stage;
 
     @FXML
-    private TableView table;
+    private BorderPane root;
+
+    @FXML
+    private TableView<WordOccurrence> table;
+
+    @FXML
+    private TableView<Sentence> sentenceTable;
 
     @FXML
     private ProgressBar progressBar;
@@ -51,6 +66,9 @@ public class RootController {
     @FXML
     private Label status;
 
+    /**
+     * Closes the EntityManagerFactory.
+     */
     public void close() {
         emfactory.close();
     }
@@ -58,19 +76,26 @@ public class RootController {
     @FXML
     public void initialize() {
         propertiesAccessor = new PropertiesAccessor<>(new SlovoProperties());
-
         try {
             propertiesAccessor.load();
         } catch (IOException ex) {
-            // TODO: message
+            LOG.log(Level.SEVERE, "Root controller has failed to load the properties file.", ex);
         }
+        SlovoProperties properties = propertiesAccessor.getProperties();
+        root.setPrefWidth(properties.getWindowWidth());
+        root.setPrefHeight(properties.getWindowHeigth());
 
         createTable();
+        createSentenceTable();
         populateTable(propertiesAccessor.getProperties().getNumberOfWords(), false);
     }
 
     public void setStage(Stage stage) {
         this.stage = stage;
+    }
+
+    public Pane getRoot() {
+        return root;
     }
 
     // --------------------------------------------------
@@ -98,33 +123,65 @@ public class RootController {
         FileChooser fileChooser = new FileChooser();
         fileChooser.setTitle("Open Text File");
         fileChooser.setSelectedExtensionFilter(new FileChooser.ExtensionFilter("Text files", "*.txt"));
-        File chosen = fileChooser.showOpenDialog(stage);
+        File document = fileChooser.showOpenDialog(stage);
 
-        if (chosen != null) {
-            setBusy();
+        if (document != null) {
+            setBusy("Reading");
             new Thread(() -> {
-                DefaultDocumentProcessor documentProcessor
-                        = new DefaultDocumentProcessor(chosen, new DefaultWordProcessor());
-                documentProcessor.processFile();
-
                 EntityManager em = emfactory.createEntityManager();
                 em.getTransaction().begin();
 
+                // Splitting document into sentences
+                DefaultDocumentProcessor documentProcessor = new DefaultDocumentProcessor();
+                documentProcessor.processDocument(document);
+                List<Sentence> sentences = documentProcessor.getSentences();
+
+                // Generating words
+                SentenceProcessor<Sentence, WordOccurrence> sentenceProcessor
+                        = new DefaultSentenceProcessor(new DefaultWordProcessor());
+
+                for (Sentence s : sentences) {
+                    sentenceProcessor.processSentence(s);
+                }
+                List<WordOccurrence> words = sentenceProcessor.getWords();
+
+                // Saving words
                 WordOccurrenceRepository wordRepo = new WordOccurrenceRepository(em);
-                wordRepo.saveWords(documentProcessor.getWords());
+                LOG.log(Level.INFO, "Saving words: {0}", words.size());
+                wordRepo.saveWords(words);
+
+                // Saving sentences
+                LOG.log(Level.INFO, "Saving sentences: {0}", sentences.size());
+                SentenceRepository sentenceRepo = new SentenceRepository(em);
+                sentenceRepo.saveSentences(sentences);
 
                 em.getTransaction().commit();
                 em.close();
 
-                Platform.runLater(() -> setReady());
-                populateTable(propertiesAccessor.getProperties().getNumberOfWords(), false);
+                Platform.runLater(() -> {
+                    populateTable(propertiesAccessor.getProperties().getNumberOfWords(), false);
+                });
             }).start();
         }
     }
-    
+
     @FXML
     public void importClicked() {
-        
+        try {
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/FXML/Import.fxml"));
+            Stage importStage = new Stage();
+            importStage.setTitle("Import words");
+            importStage.setScene(new Scene(loader.load()));
+            importStage.getIcons().add(new Image(getClass().getResourceAsStream("/icons/icon.png")));
+            importStage.show();
+            importStage.setOnHiding(e -> {
+                refresh();
+            });
+            ImportController controller = loader.getController();
+            controller.setEntityManagerFactory(emfactory);
+        } catch (IOException ex) {
+            //TODO: exception
+        }
     }
 
     @FXML
@@ -145,7 +202,7 @@ public class RootController {
 
     @FXML
     public void exitClicked() {
-        Platform.exit();
+        stage.fireEvent(new WindowEvent(stage, WindowEvent.WINDOW_CLOSE_REQUEST));
     }
 
     // --------------------------------------------------
@@ -176,13 +233,20 @@ public class RootController {
                 EntityManager em = emfactory.createEntityManager();
                 em.getTransaction().begin();
 
+                int deleted;
+
                 WordOccurrenceRepository wordRepo = new WordOccurrenceRepository(em);
-                wordRepo.eraseAllWords();
+                deleted = wordRepo.deleteAllWords();
+                LOG.log(Level.INFO, "Deleted {0} words.", deleted);
+
+                SentenceRepository sentenceRepo = new SentenceRepository(em);
+                deleted = sentenceRepo.deleteAllSentences();
+                LOG.log(Level.INFO, "Deleted {0} sentences.", deleted);
 
                 em.getTransaction().commit();
                 em.close();
 
-                Platform.runLater(() -> setReady());
+                Platform.runLater(() -> setReady()); //TODO: not on FX thread error
                 populateTable(propertiesAccessor.getProperties().getNumberOfWords(), false);
             }).start();
         }
@@ -192,7 +256,7 @@ public class RootController {
     // Table
     // --------------------------------------------------
     @FXML
-    public void tableKeyPressed(KeyEvent event) {
+    protected void tableKeyPressed(KeyEvent event) {
         if (event.getCode() == KeyCode.DELETE) {
             List<WordOccurrence> words = table.getSelectionModel().getSelectedItems();
             if (words == null) {
@@ -230,6 +294,11 @@ public class RootController {
 
     private void setBusy() {
         status.setText("Status: Busy");
+        progressBar.setProgress(-1);
+    }
+
+    private void setBusy(String message) {
+        status.setText("Status: " + message);
         progressBar.setProgress(-1);
     }
 
@@ -273,15 +342,47 @@ public class RootController {
         countCol.setCellValueFactory(new PropertyValueFactory("count"));
 
         table.getColumns().addAll(numCol, wordCol, countCol);
+
+        // Responsible for displaying sentences based on the selected word
+        table.getSelectionModel().selectedItemProperty().addListener((o, oldVal, newVal) -> {
+            if (newVal != null) {
+                EntityManager em = emfactory.createEntityManager();
+                em.getTransaction().begin();
+
+                int index = table.getSelectionModel().getSelectedIndex();
+                if (index > -1) {
+                    WordOccurrence word = em.merge(table.getItems().get(index));
+                    sentenceTable.setItems(FXCollections.observableArrayList(word.getSentences()));
+                }
+                em.close();
+            }
+        });
     }
-    
+
+    private void createSentenceTable() {
+        sentenceTable.setPlaceholder(new Label("No sentences to show, select a word."));
+
+        TableColumn<Sentence, Integer> numCol = new TableColumn("#");
+        numCol.prefWidthProperty().bind(sentenceTable.widthProperty().divide(10));
+        numCol.setSortable(false);
+        numCol.setCellValueFactory(c
+                -> new ReadOnlyObjectWrapper<>(
+                        1 + sentenceTable.getItems().indexOf(c.getValue())));
+
+        TableColumn<Sentence, String> sentenceCol = new TableColumn("Sentence");
+        sentenceCol.prefWidthProperty().bind(sentenceTable.widthProperty().divide(10).multiply(9));
+        sentenceCol.setCellValueFactory(new PropertyValueFactory("sentence"));
+
+        sentenceTable.getColumns().addAll(numCol, sentenceCol);
+    }
+
     private void refresh() {
         try {
             propertiesAccessor.load();
         } catch (IOException ex) {
-            // TODO: message
+            LOG.log(Level.SEVERE, "Failed to load the properties file.", ex);
         }
-        
+
         populateTable(propertiesAccessor.getProperties().getNumberOfWords(), false);
     }
 }

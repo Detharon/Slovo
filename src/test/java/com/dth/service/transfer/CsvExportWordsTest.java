@@ -1,4 +1,4 @@
-package com.dth.service;
+package com.dth.service.transfer;
 
 import com.dth.entity.WordOccurrence;
 import java.io.IOException;
@@ -24,11 +24,11 @@ public class CsvExportWordsTest {
     @Test
     public void writeAndClose() {
         try {
-            export.export(getTestWords());
+            export.exportWords(getTestWords());
             verify(writer).write("word,3"+LINE_SEPARATOR);
             verify(writer).write("слово,2"+LINE_SEPARATOR);
             verify(writer).write("sucedió,1"+LINE_SEPARATOR);
-        } catch (IOException ex) {
+        } catch (TransferFailedException | IOException ex) {
             ex.printStackTrace(System.out);
         }
     }

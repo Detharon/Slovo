@@ -6,7 +6,7 @@
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
 
-<BorderPane xmlns:fx="http://javafx.com/fxml/1" fx:id="borderPane" prefHeight="250.0" prefWidth="300.0"
+<BorderPane xmlns:fx="http://javafx.com/fxml/1" fx:id="root"
             fx:controller="com.dth.controller.RootController">
     
     <top>
@@ -15,9 +15,9 @@
                 <Menu text="File">
                     <MenuItem text="Preferences..." onAction="#preferencesClicked"/>
                     <MenuItem text="Open..." onAction="#openClicked"/>
-                    <SeparatorMenuItem/>
+                    <!-- <SeparatorMenuItem/>
                     <MenuItem text="Import..." onAction="#importClicked"/>
-                    <MenuItem text="Export..." onAction="#exportClicked"/>
+                    <MenuItem text="Export..." onAction="#exportClicked"/> -->
                     <SeparatorMenuItem/>
                     <MenuItem text="Exit" onAction="#exitClicked"/>
                 </Menu>
@@ -31,7 +31,10 @@
     </top>
     
     <center>
-        <TableView fx:id="table" onKeyPressed="#tableKeyPressed"/>
+        <SplitPane>
+            <TableView fx:id="table" onKeyPressed="#tableKeyPressed"/>
+            <TableView fx:id="sentenceTable"/>
+        </SplitPane>
     </center>
     
     <bottom>

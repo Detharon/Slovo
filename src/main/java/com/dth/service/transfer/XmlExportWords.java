@@ -1,4 +1,4 @@
-package com.dth.service;
+package com.dth.service.transfer;
 
 import com.dth.entity.WordOccurrence;
 import java.util.List;
@@ -24,7 +24,7 @@ public class XmlExportWords implements ExportWords {
     }
 
     @Override
-    public void export(List<WordOccurrence> words) throws ExportFailedException {
+    public void exportWords(List<WordOccurrence> words) throws TransferFailedException {
         try {
             DocumentBuilderFactory docFactory = DocumentBuilderFactory.newInstance();
             DocumentBuilder docBuilder = docFactory.newDocumentBuilder();
@@ -63,7 +63,7 @@ public class XmlExportWords implements ExportWords {
             DOMSource source = new DOMSource(doc);
             transformer.transform(source, streamResult);
         } catch (ParserConfigurationException | TransformerException ex) {
-            throw new ExportFailedException(ex);
+            throw new TransferFailedException(ex);
         } 
     }
 }

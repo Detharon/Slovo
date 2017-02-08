@@ -1,4 +1,4 @@
-package com.dth.service;
+package com.dth.service.transfer;
 
 import com.dth.entity.WordOccurrence;
 import java.io.IOException;
@@ -8,7 +8,7 @@ import java.util.List;
 public class CsvExportWords implements ExportWords {
 
     private final OutputStreamWriter writer;
-    private final String delimiter;
+    private final String format;
 
     public CsvExportWords(OutputStreamWriter writer) {
         this(writer, ",");
@@ -16,16 +16,16 @@ public class CsvExportWords implements ExportWords {
 
     public CsvExportWords(OutputStreamWriter writer, String delimiter) {
         this.writer = writer;
-        this.delimiter = "%s" + delimiter + "%d%n";
+        this.format = "%s" + delimiter + "%d%n";
     }
 
     @Override
-    public void export(List<WordOccurrence> words) throws ExportFailedException {
+    public void exportWords(List<WordOccurrence> words) throws TransferFailedException {
         for (WordOccurrence w : words) {
             try {
-                writer.write(String.format(delimiter, w.getWord(), w.getCount()));
+                writer.write(String.format(format, w.getWord(), w.getCount()));
             } catch (IOException ex) {
-                throw new ExportFailedException(ex);
+                throw new TransferFailedException(ex);
             }
         }
     }

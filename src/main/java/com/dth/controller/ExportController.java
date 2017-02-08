@@ -1,11 +1,12 @@
 package com.dth.controller;
 
 import com.dth.entity.WordOccurrence;
-import com.dth.service.CsvExportWords;
-import com.dth.service.ExportFailedException;
-import com.dth.service.ExportWords;
+import com.dth.service.transfer.CsvExportWords;
+import com.dth.service.transfer.TransferFailedException;
+import com.dth.service.transfer.ExportWords;
 import com.dth.service.WordOccurrenceRepository;
-import com.dth.service.XmlExportWords;
+import com.dth.service.transfer.XmlExportWords;
+import com.dth.service.transfer.TransferModes;
 import com.dth.slovo.properties.PropertiesAccessor;
 import com.dth.slovo.properties.SlovoProperties;
 import java.io.File;
@@ -31,26 +32,6 @@ import javax.xml.transform.stream.StreamResult;
 
 public class ExportController implements Initializable {
 
-    private enum ExportModes {
-        CSV("Csv"),
-        XML("XML");
-
-        private final String name;
-
-        ExportModes(String name) {
-            this.name = name;
-        }
-
-        public String getName() {
-            return name;
-        }
-
-        @Override
-        public String toString() {
-            return name;
-        }
-    }
-
     private static final Charset[] ENCODINGS = {
         StandardCharsets.UTF_8,
         StandardCharsets.UTF_16,
@@ -61,7 +42,7 @@ public class ExportController implements Initializable {
     private EntityManagerFactory emfactory;
 
     @FXML
-    ComboBox<ExportModes> exportMode;
+    ComboBox<TransferModes> exportMode;
 
     @FXML
     ComboBox<Charset> encoding;
@@ -81,11 +62,11 @@ public class ExportController implements Initializable {
     }
 
     private void initializeExportModeComboBox() {
-        exportMode.setItems(FXCollections.observableList(Arrays.asList(ExportModes.values())));
+        exportMode.setItems(FXCollections.observableList(Arrays.asList(TransferModes.values())));
         exportMode.getSelectionModel().selectFirst();
         
         exportMode.setOnAction(e -> {
-            if (exportMode.getSelectionModel().getSelectedItem() == ExportModes.XML) {
+            if (exportMode.getSelectionModel().getSelectedItem() == TransferModes.XML) {
                 encoding.setDisable(true);
             } else {
                 encoding.setDisable(false);
@@ -113,7 +94,7 @@ public class ExportController implements Initializable {
         String filename = "words."+extension;
         
         FileChooser fileChooser = new FileChooser();
-        fileChooser.setTitle("Select file to save");
+        fileChooser.setTitle("Select file to export to");
         fileChooser.setSelectedExtensionFilter(new FileChooser.ExtensionFilter("Text files", filter));
         fileChooser.setInitialFileName(filename);
         File chosen = fileChooser.showSaveDialog(exportMode.getScene().getWindow());
@@ -124,14 +105,15 @@ public class ExportController implements Initializable {
             
             WordOccurrenceRepository wordRepo = new WordOccurrenceRepository(em);
             List<WordOccurrence> words = wordRepo.fetchWords(propertiesAccessor.getProperties().getNumberOfWords());
-
+            em.close();
+            
             ExportWords export;
             switch (exportMode.getSelectionModel().getSelectedItem()) {
                 case CSV:
                     Charset charset = encoding.getSelectionModel().getSelectedItem();
                     try (OutputStreamWriter writer = new OutputStreamWriter(new FileOutputStream(chosen), charset)) {
                         export = new CsvExportWords(writer);
-                        export.export(words);
+                        export.exportWords(words);
                     } catch (Exception ex) {
                         // TODO: handle exception
                     }
@@ -140,8 +122,8 @@ public class ExportController implements Initializable {
                     try {
                         StreamResult streamResult = new StreamResult(chosen);
                         export = new XmlExportWords(streamResult);
-                        export.export(words);
-                    } catch (ParserConfigurationException | ExportFailedException ex) {
+                        export.exportWords(words);
+                    } catch (ParserConfigurationException | TransferFailedException ex) {
                         // TODO: handle exception
                     }
                     break;
