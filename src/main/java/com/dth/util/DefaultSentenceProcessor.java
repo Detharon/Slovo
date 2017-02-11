@@ -6,7 +6,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Optional;
 
-public class DefaultSentenceProcessor implements SentenceProcessor<Sentence, WordOccurrence>  {
+public class DefaultSentenceProcessor implements SentenceProcessor<Sentence, WordOccurrence> {
 
     public WordProcessor<String> wordProcessor;
     public List<WordOccurrence> words;
@@ -24,18 +24,23 @@ public class DefaultSentenceProcessor implements SentenceProcessor<Sentence, Wor
             String word = wordProcessor.processWord(wordCandidate);
             if (word.equals("")) {
                 return;
-            }      
-            
+            }
+
             Optional<WordOccurrence> existingWordOccurrence = words.stream()
                     .filter(w -> w.getWord().equals(word))
                     .findAny();
 
             if (existingWordOccurrence.isPresent()) {
                 WordOccurrence wordOccurrence = existingWordOccurrence.get();
-                
+
                 wordOccurrence.incrementCount();
-                wordOccurrence.getSentences().add(sentence);
-                sentence.getWords().add(wordOccurrence);
+                if (!wordOccurrence.getSentences().contains(sentence)) {
+                    wordOccurrence.getSentences().add(sentence);
+                }
+
+                if (!sentence.getWords().contains(wordOccurrence)) {
+                    sentence.getWords().add(wordOccurrence);
+                }
             } else {
                 WordOccurrence wordOccurrence = new WordOccurrence(word);
                 words.add(wordOccurrence);
