@@ -10,7 +10,7 @@
             fx:controller="com.dth.controller.RootController">
     
     <top>
-        <MenuBar>
+        <MenuBar fx:id="menuBar">
             <menus>
                 <Menu text="File">
                     <MenuItem text="Preferences..." onAction="#preferencesClicked"/>
@@ -32,8 +32,25 @@
     
     <center>
         <SplitPane>
-            <TableView fx:id="table" onKeyPressed="#tableKeyPressed"/>
-            <TableView fx:id="sentenceTable"/>
+            <TableView fx:id="wordTable">
+                <contextMenu>
+                    <ContextMenu fx:id="wordTableContextMenu">
+                        <items>
+                            <MenuItem text="Copy" accelerator="ctrl+c" onAction="#copyClicked"/>
+                            <MenuItem text="Ignore" accelerator="ctrl+i" onAction="#ignoreClicked"/>
+                        </items>
+                    </ContextMenu>
+                </contextMenu>                
+            </TableView>
+            <TableView fx:id="sentenceTable">
+                <contextMenu>
+                    <ContextMenu fx:id="sentenceTableContextMenu">
+                        <items>
+                            <MenuItem text="Copy" accelerator="ctrl+c" onAction="#copyClicked"/>
+                        </items>
+                    </ContextMenu>
+                </contextMenu>       
+            </TableView>
         </SplitPane>
     </center>
     
@@ -44,6 +61,7 @@
             </padding>
             <children>
                 <Label fx:id='status' text="Status: Ready"/>
+                <Separator orientation="VERTICAL"/> 
                 <ProgressBar fx:id='progressBar' progress='100' maxWidth="Infinity" HBox.hgrow="ALWAYS"/>
             </children>
         </HBox>

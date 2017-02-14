@@ -24,15 +24,17 @@ import javafx.fxml.FXMLLoader;
 import javafx.scene.Scene;
 import javafx.scene.control.Alert;
 import javafx.scene.control.ButtonType;
+import javafx.scene.control.ContextMenu;
 import javafx.scene.control.Label;
+import javafx.scene.control.MenuBar;
 import javafx.scene.control.ProgressBar;
 import javafx.scene.control.SelectionMode;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.image.Image;
-import javafx.scene.input.KeyCode;
-import javafx.scene.input.KeyEvent;
+import javafx.scene.input.Clipboard;
+import javafx.scene.input.ClipboardContent;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.Pane;
 import javafx.stage.FileChooser;
@@ -55,10 +57,17 @@ public class RootController {
     private BorderPane root;
 
     @FXML
-    private TableView<WordOccurrence> table;
+    private MenuBar menuBar;
+
+    @FXML
+    private TableView<WordOccurrence> wordTable;
+    @FXML
+    private ContextMenu wordTableContextMenu;
 
     @FXML
     private TableView<Sentence> sentenceTable;
+    @FXML
+    private ContextMenu sentenceTableContextMenu;
 
     @FXML
     private ProgressBar progressBar;
@@ -85,9 +94,9 @@ public class RootController {
         root.setPrefWidth(properties.getWindowWidth());
         root.setPrefHeight(properties.getWindowHeigth());
 
-        createTable();
+        createWordTable();
         createSentenceTable();
-        populateTable(propertiesAccessor.getProperties().getNumberOfWords(), false);
+        refresh();
     }
 
     public void setStage(Stage stage) {
@@ -127,7 +136,10 @@ public class RootController {
 
         if (document != null) {
             setBusy("Reading");
+            enableGUI(false);
             new Thread(() -> {
+                long startTime = System.currentTimeMillis();
+
                 EntityManager em = emfactory.createEntityManager();
                 em.getTransaction().begin();
 
@@ -161,10 +173,11 @@ public class RootController {
 
                 em.getTransaction().commit();
                 em.close();
+                refresh();
 
-                Platform.runLater(() -> {
-                    populateTable(propertiesAccessor.getProperties().getNumberOfWords(), false);
-                });
+                enableGUI(true);
+                long endTime = System.currentTimeMillis();
+                LOG.log(Level.INFO, "Time elapsed to read the file: {0}ms", endTime - startTime);
             }).start();
         }
     }
@@ -232,6 +245,7 @@ public class RootController {
         Optional<ButtonType> result = alert.showAndWait();
         if (result.get() == ButtonType.OK) {
             setBusy();
+            enableGUI(false);
 
             new Thread(() -> {
                 EntityManager em = emfactory.createEntityManager();
@@ -250,42 +264,146 @@ public class RootController {
                 em.getTransaction().commit();
                 em.close();
 
-                Platform.runLater(() -> setReady()); //TODO: not on FX thread error
-                populateTable(propertiesAccessor.getProperties().getNumberOfWords(), false);
+                Platform.runLater(() -> setReady());
+
+                // Refresh the wordTable with words
+                refresh();
+                enableGUI(true);
+
+                // Clear the sentence selection
+                sentenceTable.setItems(FXCollections.observableArrayList());
             }).start();
         }
     }
 
     // --------------------------------------------------
-    // Table
+    // Word Table
     // --------------------------------------------------
-    @FXML
-    protected void tableKeyPressed(KeyEvent event) {
-        if (event.getCode() == KeyCode.DELETE) {
-            List<WordOccurrence> words = table.getSelectionModel().getSelectedItems();
-            if (words == null) {
-                return;
-            }
+    private void createWordTable() {
+        wordTable.setPlaceholder(new Label("No words to show, open a new text file."));
+        wordTable.getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);
 
-            setBusy();
-            new Thread(() -> {
-                for (WordOccurrence w : words) {
-                    w.setIgnored(!w.getIgnored());
-                }
+        TableColumn<WordOccurrence, Integer> numCol = new TableColumn("#");
+        numCol.prefWidthProperty().bind(wordTable.widthProperty().divide(6));
+        numCol.setSortable(false);
+        numCol.setCellValueFactory(c
+                -> new ReadOnlyObjectWrapper<>(
+                        1 + wordTable.getItems().indexOf(c.getValue())));
 
+        TableColumn<WordOccurrence, String> wordCol = new TableColumn("Word");
+        wordCol.prefWidthProperty().bind(wordTable.widthProperty().divide(6).multiply(3));
+        wordCol.setCellValueFactory(new PropertyValueFactory("word"));
+
+        TableColumn<WordOccurrence, Integer> countCol = new TableColumn("Count");
+        countCol.prefWidthProperty().bind(wordTable.widthProperty().divide(6).multiply(2));
+        countCol.setCellValueFactory(new PropertyValueFactory("count"));
+
+        wordTable.getColumns().addAll(numCol, wordCol, countCol);
+
+        // Responsible for displaying sentences based on the selected word
+        wordTable.getSelectionModel().selectedItemProperty().addListener((o, oldVal, newVal) -> {
+            if (newVal != null) {
                 EntityManager em = emfactory.createEntityManager();
                 em.getTransaction().begin();
 
-                WordOccurrenceRepository wordRepo = new WordOccurrenceRepository(em);
-                wordRepo.updateWords(words);
-
-                em.getTransaction().commit();
+                int index = wordTable.getSelectionModel().getSelectedIndex();
+                if (index > -1) {
+                    WordOccurrence word = em.merge(wordTable.getItems().get(index));
+                    sentenceTable.setItems(FXCollections.observableArrayList(word.getSentences()));
+                }
                 em.close();
+            }
+        });
+    }
 
-                table.getItems().removeAll(words);
-                Platform.runLater(() -> setReady());
-            }).start();
+    private void selectedWordsToClipboard() {
+        if (!wordTable.getSelectionModel().isEmpty()) {
+            Clipboard clipboard = Clipboard.getSystemClipboard();
+            ClipboardContent content = new ClipboardContent();
+
+            List<WordOccurrence> words = wordTable.getSelectionModel().getSelectedItems();
+
+            StringBuilder wordString = new StringBuilder();
+            for (int i = 0; i < words.size(); i++) {
+                wordString.append(words.get(i).getWord());
+
+                if (i != words.size() - 1) {
+                    wordString.append(", ");
+                }
+            }
+
+            content.putString(wordString.toString());
+            clipboard.setContent(content);
         }
+    }
+
+    // --------------------------------------------------
+    // Sentence Table
+    // --------------------------------------------------
+    private void createSentenceTable() {
+        sentenceTable.setPlaceholder(new Label("No sentences to show, select a word."));
+
+        TableColumn<Sentence, Integer> numCol = new TableColumn("#");
+        numCol.prefWidthProperty().bind(sentenceTable.widthProperty().divide(10));
+        numCol.setSortable(false);
+        numCol.setCellValueFactory(c
+                -> new ReadOnlyObjectWrapper<>(
+                        1 + sentenceTable.getItems().indexOf(c.getValue())));
+
+        TableColumn<Sentence, String> sentenceCol = new TableColumn("Sentence");
+        sentenceCol.prefWidthProperty().bind(sentenceTable.widthProperty().divide(10).multiply(9));
+        sentenceCol.setCellValueFactory(new PropertyValueFactory("sentence"));
+
+        sentenceTable.getColumns().addAll(numCol, sentenceCol);
+    }
+
+    private void selectedSentenceToClipboard() {
+        if (!sentenceTable.getSelectionModel().isEmpty()) {
+            Clipboard clipboard = Clipboard.getSystemClipboard();
+            ClipboardContent content = new ClipboardContent();
+            String sentence = sentenceTable.getSelectionModel().getSelectedItem().getSentence();
+            content.putString(sentence);
+            clipboard.setContent(content);
+        }
+    }
+
+    // --------------------------------------------------
+    // Context Menus
+    // --------------------------------------------------        
+    @FXML
+    public void copyClicked() {
+        if (sentenceTable.isFocused()) {
+            selectedSentenceToClipboard();
+        } else if (wordTable.isFocused()) {
+            selectedWordsToClipboard();
+        }
+    }
+
+    @FXML
+    public void ignoreClicked() {
+        List<WordOccurrence> words = wordTable.getSelectionModel().getSelectedItems();
+        if (words == null) {
+            return;
+        }
+
+        setBusy();
+        new Thread(() -> {
+            for (WordOccurrence w : words) {
+                w.setIgnored(!w.getIgnored());
+            }
+
+            EntityManager em = emfactory.createEntityManager();
+            em.getTransaction().begin();
+
+            WordOccurrenceRepository wordRepo = new WordOccurrenceRepository(em);
+            wordRepo.updateWords(words);
+
+            em.getTransaction().commit();
+            em.close();
+
+            wordTable.getItems().removeAll(words);
+            Platform.runLater(() -> setReady());
+        }).start();
     }
 
     // --------------------------------------------------
@@ -306,78 +424,35 @@ public class RootController {
         progressBar.setProgress(-1);
     }
 
+    private void enableGUI(boolean enable) {
+        menuBar.setDisable(!enable);
+        // wordTableContextMenu.getItems().forEach(m -> {m.setDisable(!enable);});
+        // sentenceTableContextMenu.getItems().forEach(m -> {m.setDisable(!enable);});
+    }
+
     private void populateTable(int rows, boolean ignored) {
-        setBusy();
+        Platform.runLater(() -> setBusy());
+
         new Thread(() -> {
             EntityManager em = emfactory.createEntityManager();
             em.getTransaction().begin();
 
             WordOccurrenceRepository query = new WordOccurrenceRepository(em);
+            List<WordOccurrence> words;
             if (!ignored) {
-                table.setItems(FXCollections.observableList(query.fetchWords(rows)));
+                words = query.fetchWords(rows);
             } else {
-                table.setItems(FXCollections.observableList(query.fetchWords(rows, true)));
+                words = query.fetchWords(rows, true);
             }
 
             em.getTransaction().commit();
             em.close();
 
-            Platform.runLater(() -> setReady());
+            Platform.runLater(() -> {
+                wordTable.setItems(FXCollections.observableList(words));
+                setReady();
+            });
         }).start();
-    }
-
-    private void createTable() {
-        table.setPlaceholder(new Label("No words to show, open a new text file."));
-        table.getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);
-
-        TableColumn<WordOccurrence, Integer> numCol = new TableColumn("#");
-        numCol.prefWidthProperty().bind(table.widthProperty().divide(6));
-        numCol.setSortable(false);
-        numCol.setCellValueFactory(c
-                -> new ReadOnlyObjectWrapper<>(
-                        1 + table.getItems().indexOf(c.getValue())));
-
-        TableColumn<WordOccurrence, String> wordCol = new TableColumn("Word");
-        wordCol.prefWidthProperty().bind(table.widthProperty().divide(6).multiply(3));
-        wordCol.setCellValueFactory(new PropertyValueFactory("word"));
-
-        TableColumn<WordOccurrence, Integer> countCol = new TableColumn("Count");
-        countCol.prefWidthProperty().bind(table.widthProperty().divide(6).multiply(2));
-        countCol.setCellValueFactory(new PropertyValueFactory("count"));
-
-        table.getColumns().addAll(numCol, wordCol, countCol);
-
-        // Responsible for displaying sentences based on the selected word
-        table.getSelectionModel().selectedItemProperty().addListener((o, oldVal, newVal) -> {
-            if (newVal != null) {
-                EntityManager em = emfactory.createEntityManager();
-                em.getTransaction().begin();
-
-                int index = table.getSelectionModel().getSelectedIndex();
-                if (index > -1) {
-                    WordOccurrence word = em.merge(table.getItems().get(index));
-                    sentenceTable.setItems(FXCollections.observableArrayList(word.getSentences()));
-                }
-                em.close();
-            }
-        });
-    }
-
-    private void createSentenceTable() {
-        sentenceTable.setPlaceholder(new Label("No sentences to show, select a word."));
-
-        TableColumn<Sentence, Integer> numCol = new TableColumn("#");
-        numCol.prefWidthProperty().bind(sentenceTable.widthProperty().divide(10));
-        numCol.setSortable(false);
-        numCol.setCellValueFactory(c
-                -> new ReadOnlyObjectWrapper<>(
-                        1 + sentenceTable.getItems().indexOf(c.getValue())));
-
-        TableColumn<Sentence, String> sentenceCol = new TableColumn("Sentence");
-        sentenceCol.prefWidthProperty().bind(sentenceTable.widthProperty().divide(10).multiply(9));
-        sentenceCol.setCellValueFactory(new PropertyValueFactory("sentence"));
-
-        sentenceTable.getColumns().addAll(numCol, sentenceCol);
     }
 
     private void refresh() {

@@ -23,7 +23,7 @@ public class DefaultSentenceProcessor implements SentenceProcessor<Sentence, Wor
         for (String wordCandidate : wordCandidates) {
             String word = wordProcessor.processWord(wordCandidate);
             if (word.equals("")) {
-                return;
+                continue;
             }
 
             Optional<WordOccurrence> existingWordOccurrence = words.stream()
@@ -36,16 +36,15 @@ public class DefaultSentenceProcessor implements SentenceProcessor<Sentence, Wor
                 wordOccurrence.incrementCount();
                 if (!wordOccurrence.getSentences().contains(sentence)) {
                     wordOccurrence.getSentences().add(sentence);
-                }
-
-                if (!sentence.getWords().contains(wordOccurrence)) {
-                    sentence.getWords().add(wordOccurrence);
+                    if (!sentence.getWords().contains(wordOccurrence)) {
+                        sentence.getWords().add(wordOccurrence);
+                    }
                 }
             } else {
                 WordOccurrence wordOccurrence = new WordOccurrence(word);
-                words.add(wordOccurrence);
                 wordOccurrence.getSentences().add(sentence);
                 sentence.getWords().add(wordOccurrence);
+                words.add(wordOccurrence);
             }
         }
     }

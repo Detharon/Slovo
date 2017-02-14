@@ -33,7 +33,6 @@ public class DefaultSentenceProcessorTest {
         mockProcessorForSecondSentence(wp);
         mockProcessorForThirdSentence(wp);
         mockProcessorForFourthSentence(wp);
-
     }
 
     @Before

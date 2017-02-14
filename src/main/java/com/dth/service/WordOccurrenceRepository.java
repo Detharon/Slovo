@@ -1,7 +1,7 @@
 package com.dth.service;
 
-import com.dth.entity.Sentence;
 import com.dth.entity.WordOccurrence;
+import com.dth.util.WordUtils;
 import java.util.List;
 import java.util.Optional;
 import javax.persistence.EntityManager;
@@ -19,6 +19,19 @@ public class WordOccurrenceRepository {
     public WordOccurrenceRepository(EntityManager em) {
         this.em = em;
         this.cb = em.getCriteriaBuilder();
+    }
+
+    /**
+     * Returns all word occurrences stored in the database.
+     *
+     * @return the list of word occurrences.
+     */
+    public List findAll() {
+        CriteriaQuery cq = cb.createQuery(WordOccurrence.class);
+        Root<WordOccurrence> words = cq.from(WordOccurrence.class);
+        cq.select(words);
+        TypedQuery<WordOccurrence> query = em.createQuery(cq);
+        return query.getResultList();
     }
 
     /**
@@ -67,33 +80,18 @@ public class WordOccurrenceRepository {
         // It gets all the results, so it can possibly run out of memory.
         // Grabbing objects one by one takes too much time.
         // TODO: manual iterations with setFirstResult/setMaxResults
-        CriteriaQuery cq = cb.createQuery(WordOccurrence.class);
+        List<WordOccurrence> oldWords = findAll();
 
-        Root<WordOccurrence> words = cq.from(WordOccurrence.class);
-        cq.select(words);
-
-        TypedQuery<WordOccurrence> query = em.createQuery(cq);
-        List<WordOccurrence> results = query.getResultList();
-
-        for (WordOccurrence wordOccurrence : wordOccurrences) {
-            Optional<WordOccurrence> result = results.stream()
-                    .filter(c -> c.getWord().equals(wordOccurrence.getWord()))
-                    .findFirst();
-
-            if (result.isPresent()) {
-                WordOccurrence word = result.get();
-                word.setCount(word.getCount() + wordOccurrence.getCount());
-                
-                List<Sentence> sentences = wordOccurrence.getSentences();
-                for (Sentence s : sentences) {
-                    s.getWords().remove(wordOccurrence);
-                    s.getWords().add(word);
-                }                
-                word.getSentences().addAll(sentences);
-                
-                em.merge(word);
+        for (WordOccurrence newWord : wordOccurrences) {
+            Optional<WordOccurrence> oldWord = oldWords.stream()
+                    .filter(w -> w.getWord().equals(newWord.getWord()))
+                    .findAny();
+            if (oldWord.isPresent()) {
+                // Sum the number of occurrences
+                WordOccurrence word = oldWord.get();
+                WordUtils.merge(word, newWord);
             } else {
-                em.persist(wordOccurrence);
+                em.persist(newWord);
             }
         }
     }
