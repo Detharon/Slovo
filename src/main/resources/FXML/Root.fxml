@@ -39,6 +39,7 @@
                         <items>
                             <MenuItem text="Copy" accelerator="ctrl+c" onAction="#copyClicked"/>
                             <MenuItem text="Ignore" accelerator="ctrl+i" onAction="#ignoreClicked"/>
+                            <MenuItem text="Delete" accelerator="delete" onAction="#deleteClicked"/>
                         </items>
                     </ContextMenu>
                 </contextMenu>                
@@ -48,6 +49,7 @@
                     <ContextMenu fx:id="sentenceTableContextMenu">
                         <items>
                             <MenuItem text="Copy" accelerator="ctrl+c" onAction="#copyClicked"/>
+                            <MenuItem text="Delete" accelerator="delete" onAction="#deleteClicked"/>
                         </items>
                     </ContextMenu>
                 </contextMenu>       

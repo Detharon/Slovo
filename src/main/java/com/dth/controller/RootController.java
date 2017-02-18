@@ -255,11 +255,11 @@ public class RootController {
                 int deleted;
 
                 WordOccurrenceRepository wordRepo = new WordOccurrenceRepository(em);
-                deleted = wordRepo.deleteAllWords();
+                deleted = wordRepo.deleteAll();
                 LOG.log(Level.INFO, "Deleted {0} words.", deleted);
 
                 SentenceRepository sentenceRepo = new SentenceRepository(em);
-                deleted = sentenceRepo.deleteAllSentences();
+                deleted = sentenceRepo.deleteAll();
                 LOG.log(Level.INFO, "Deleted {0} sentences.", deleted);
 
                 em.getTransaction().commit();
@@ -338,11 +338,40 @@ public class RootController {
         }
     }
 
+    private void deleteSelectedWords() {
+        if (!wordTable.getSelectionModel().isEmpty()) {
+            setBusy();
+            enableGUI(false);
+            new Thread(() -> {
+                EntityManager em = emfactory.createEntityManager();
+                em.getTransaction().begin();
+
+                WordOccurrenceRepository repo = new WordOccurrenceRepository(em);
+
+                int result;
+                if (wordTable.getSelectionModel().getSelectedItems().size() == 1) {
+                    result = repo.delete(wordTable.getSelectionModel().getSelectedItem());
+                } else {
+                    result = repo.delete(wordTable.getSelectionModel().getSelectedItems());
+                }
+
+                LOG.log(Level.INFO, "Deleted words: {0}", result);
+                
+                em.getTransaction().commit();
+                em.close();
+
+                refresh();
+                enableGUI(true);
+            }).start();
+        }
+    }
+
     // --------------------------------------------------
     // Sentence Table
     // --------------------------------------------------
     private void createSentenceTable() {
         sentenceTable.setPlaceholder(new Label("No sentences to show, select a word."));
+        sentenceTable.getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);
 
         TableColumn<Sentence, Integer> numCol = new TableColumn("#");
         numCol.prefWidthProperty().bind(sentenceTable.widthProperty().divide(10));
@@ -358,13 +387,54 @@ public class RootController {
         sentenceTable.getColumns().addAll(numCol, sentenceCol);
     }
 
-    private void selectedSentenceToClipboard() {
+    private void selectedSentencesToClipboard() {
         if (!sentenceTable.getSelectionModel().isEmpty()) {
             Clipboard clipboard = Clipboard.getSystemClipboard();
             ClipboardContent content = new ClipboardContent();
+            
+            List<Sentence> sentences = sentenceTable.getSelectionModel().getSelectedItems();
+            
+            StringBuilder sentenceString = new StringBuilder();
+            for (int i = 0; i < sentences.size(); i++) {
+                sentenceString.append(sentences.get(i).getSentence());
+
+                if (i != sentences.size() - 1) {
+                    sentenceString.append(", ");
+                }
+            }            
+            
             String sentence = sentenceTable.getSelectionModel().getSelectedItem().getSentence();
             content.putString(sentence);
             clipboard.setContent(content);
+        }
+    }
+
+    private void deleteSelectedSentences() {
+        if (!sentenceTable.getSelectionModel().isEmpty()) {
+            setBusy();
+            enableGUI(false);
+
+            new Thread(() -> {
+                EntityManager em = emfactory.createEntityManager();
+                em.getTransaction().begin();
+
+                SentenceRepository repo = new SentenceRepository(em);
+
+                int result;
+                if (sentenceTable.getSelectionModel().getSelectedItems().size() == 1) {
+                    result = repo.delete(sentenceTable.getSelectionModel().getSelectedItem());
+                } else {
+                    result = repo.delete(sentenceTable.getSelectionModel().getSelectedItems());
+                }
+
+                LOG.log(Level.INFO, "Deleted sentences: {0}", result);
+
+                em.getTransaction().commit();
+                em.close();
+                
+                refresh();
+                enableGUI(true);
+            }).start();
         }
     }
 
@@ -374,7 +444,7 @@ public class RootController {
     @FXML
     public void copyClicked() {
         if (sentenceTable.isFocused()) {
-            selectedSentenceToClipboard();
+            selectedSentencesToClipboard();
         } else if (wordTable.isFocused()) {
             selectedWordsToClipboard();
         }
@@ -405,6 +475,15 @@ public class RootController {
             wordTable.getItems().removeAll(words);
             Platform.runLater(() -> setReady());
         }).start();
+    }
+
+    @FXML
+    public void deleteClicked() {
+        if (sentenceTable.isFocused()) {
+            deleteSelectedSentences();
+        } else if (wordTable.isFocused()) {
+            deleteSelectedWords();
+        }
     }
 
     // --------------------------------------------------

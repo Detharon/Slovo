@@ -21,13 +21,13 @@ public class SentenceRepository {
         this.em = em;
         this.cb = em.getCriteriaBuilder();
     }
-    
+
     public List<Sentence> findAll() {
         CriteriaQuery cq = cb.createQuery(Sentence.class);
 
         Root<Sentence> sentences = cq.from(Sentence.class);
         cq.select(sentences);
-        
+
         return em.createQuery(cq).getResultList();
     }
 
@@ -46,23 +46,23 @@ public class SentenceRepository {
 
     public void saveSentences(List<Sentence> sentences, List<WordOccurrence> listOfExistingWords) {
         List<Sentence> currentSentences = findAll();
-        
+
         Map<String, WordOccurrence> existingWords = listOfExistingWords
                 .parallelStream()
                 .collect(Collectors.toMap(WordOccurrence::getWord, item -> item));
-        
+
         for (Sentence sentence : sentences) {
             if (currentSentences.contains(sentence)) {
                 continue;
             }
-            
+
             List<WordOccurrence> oldWords = sentence.getWords();
             List<WordOccurrence> newWords = new ArrayList<>();
-            
+
             for (WordOccurrence oldWord : oldWords) {
                 newWords.add(existingWords.get(oldWord.getWord()));
             }
-            
+
             sentence.setWords(newWords);
             em.persist(sentence);
         }
@@ -70,14 +70,44 @@ public class SentenceRepository {
 
     /**
      * Removes all sentences from the database.
-     * 
+     *
      * @return the number of sentences deleted.
      */
-    public int deleteAllSentences() {
+    public int deleteAll() {
         CriteriaDelete<Sentence> delete = cb.createCriteriaDelete(Sentence.class);
-        
+
         delete.from(Sentence.class);
-        
+
+        return em.createQuery(delete).executeUpdate();
+    }
+
+    /**
+     * Removes given sentences from the database.
+     *
+     * @param sentences the sentences to be removed.
+     * @return the number of sentences removed.
+     */
+    public int delete(List<Sentence> sentences) {
+        CriteriaDelete<Sentence> delete = cb.createCriteriaDelete(Sentence.class);
+
+        Root<Sentence> root = delete.from(Sentence.class);
+        delete.where(root.in(sentences));
+
+        return em.createQuery(delete).executeUpdate();
+    }
+
+    /**
+     * Removes the specified sentence from the database.
+     *
+     * @param sentence the sentence to be removed.
+     * @return the number of sentences removed.
+     */
+    public int delete(Sentence sentence) {
+        CriteriaDelete<Sentence> delete = cb.createCriteriaDelete(Sentence.class);
+
+        Root<Sentence> root = delete.from(Sentence.class);
+        delete.where(cb.equal(root, sentence));
+
         return em.createQuery(delete).executeUpdate();
     }
 }

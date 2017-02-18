@@ -113,10 +113,40 @@ public class WordOccurrenceRepository {
      *
      * @return the number of words deleted.
      */
-    public int deleteAllWords() {
+    public int deleteAll() {
         CriteriaDelete<WordOccurrence> delete = cb.createCriteriaDelete(WordOccurrence.class);
 
         delete.from(WordOccurrence.class);
+
+        return em.createQuery(delete).executeUpdate();
+    }
+
+    /**
+     * Removes given words from the database.
+     *
+     * @param words the words to be removed.
+     * @return number of words removed.
+     */
+    public int delete(List<WordOccurrence> words) {
+        CriteriaDelete<WordOccurrence> delete = cb.createCriteriaDelete(WordOccurrence.class);
+
+        Root<WordOccurrence> root = delete.from(WordOccurrence.class);
+        delete.where(root.in(words));
+
+        return em.createQuery(delete).executeUpdate();
+    }
+
+    /**
+     * Removes the specified word from the database.
+     *
+     * @param word the word to be removed.
+     * @return number of words removed.
+     */
+    public int delete(WordOccurrence word) {
+        CriteriaDelete<WordOccurrence> delete = cb.createCriteriaDelete(WordOccurrence.class);
+
+        Root<WordOccurrence> root = delete.from(WordOccurrence.class);
+        delete.where(cb.equal(root, word));
 
         return em.createQuery(delete).executeUpdate();
     }
