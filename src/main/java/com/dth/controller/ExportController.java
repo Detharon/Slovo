@@ -19,6 +19,8 @@ import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.List;
 import java.util.ResourceBundle;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javafx.collections.FXCollections;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
@@ -31,6 +33,8 @@ import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.transform.stream.StreamResult;
 
 public class ExportController implements Initializable {
+
+    private static final Logger LOG = Logger.getLogger(ExportController.class.getName());
 
     private static final Charset[] ENCODINGS = {
         StandardCharsets.UTF_8,
@@ -54,7 +58,7 @@ public class ExportController implements Initializable {
         try {
             propertiesAccessor.load();
         } catch (IOException ex) {
-            // TODO: error message
+            LOG.log(Level.SEVERE, "Failed to load the properties file.", ex);
         }
 
         initializeExportModeComboBox();
@@ -64,7 +68,7 @@ public class ExportController implements Initializable {
     private void initializeExportModeComboBox() {
         exportMode.setItems(FXCollections.observableList(Arrays.asList(TransferModes.values())));
         exportMode.getSelectionModel().selectFirst();
-        
+
         exportMode.setOnAction(e -> {
             if (exportMode.getSelectionModel().getSelectedItem() == TransferModes.XML) {
                 encoding.setDisable(true);
@@ -90,9 +94,9 @@ public class ExportController implements Initializable {
                 extension = "xml";
                 break;
         }
-        String filter = "*."+extension;
-        String filename = "words."+extension;
-        
+        String filter = "*." + extension;
+        String filename = "words." + extension;
+
         FileChooser fileChooser = new FileChooser();
         fileChooser.setTitle("Select file to export to");
         fileChooser.setSelectedExtensionFilter(new FileChooser.ExtensionFilter("Text files", filter));
@@ -102,11 +106,11 @@ public class ExportController implements Initializable {
         if (chosen != null) {
             EntityManager em = emfactory.createEntityManager();
             em.getTransaction().begin();
-            
+
             WordOccurrenceRepository wordRepo = new WordOccurrenceRepository(em);
             List<WordOccurrence> words = wordRepo.fetchWords(propertiesAccessor.getProperties().getNumberOfWords());
             em.close();
-            
+
             ExportWords export;
             switch (exportMode.getSelectionModel().getSelectedItem()) {
                 case CSV:
@@ -114,8 +118,10 @@ public class ExportController implements Initializable {
                     try (OutputStreamWriter writer = new OutputStreamWriter(new FileOutputStream(chosen), charset)) {
                         export = new CsvExportWords(writer);
                         export.exportWords(words);
-                    } catch (Exception ex) {
-                        // TODO: handle exception
+                    } catch (TransferFailedException ex) {
+                        LOG.log(Level.SEVERE, "Failed to parse the words to be exported.", ex);
+                    } catch (IOException ex) {
+                        LOG.log(Level.SEVERE, "Failed to close the writer.", ex);
                     }
                     break;
                 case XML:
@@ -124,7 +130,7 @@ public class ExportController implements Initializable {
                         export = new XmlExportWords(streamResult);
                         export.exportWords(words);
                     } catch (ParserConfigurationException | TransferFailedException ex) {
-                        // TODO: handle exception
+                        LOG.log(Level.SEVERE, "Failed to parse the words to be exported.", ex);
                     }
                     break;
             }

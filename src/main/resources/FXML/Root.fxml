@@ -15,9 +15,6 @@
                 <Menu text="File">
                     <MenuItem text="Preferences..." onAction="#preferencesClicked"/>
                     <MenuItem text="Open..." onAction="#openClicked"/>
-                    <!-- <SeparatorMenuItem/>
-                    <MenuItem text="Import..." onAction="#importClicked"/>
-                    <MenuItem text="Export..." onAction="#exportClicked"/> -->
                     <SeparatorMenuItem/>
                     <MenuItem text="Exit" onAction="#exitClicked"/>
                 </Menu>
@@ -25,6 +22,10 @@
                     <MenuItem text="Erase all" onAction="#eraseAllClicked"/>
                     <MenuItem text="Word list" onAction="#wordListClicked"/>
                     <MenuItem text="Ignore list" onAction="#ignoreListClicked"/>
+                </Menu>
+                <Menu text="Transfer">
+                    <MenuItem text="Import words" onAction="#importWordsClicked"/>
+                    <MenuItem text="Export words" onAction="#exportWordsClicked"/>
                 </Menu>
             </menus>
         </MenuBar>

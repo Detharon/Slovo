@@ -16,6 +16,8 @@ import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.List;
 import java.util.ResourceBundle;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javafx.collections.FXCollections;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
@@ -26,6 +28,8 @@ import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
 
 public class ImportController implements Initializable {
+
+    private static final Logger LOG = Logger.getLogger(ImportController.class.getName());
 
     private PropertiesAccessor<SlovoProperties> propertiesAccessor;
     private EntityManagerFactory emfactory;
@@ -49,7 +53,7 @@ public class ImportController implements Initializable {
         try {
             propertiesAccessor.load();
         } catch (IOException ex) {
-            // TODO: error message
+            LOG.log(Level.SEVERE, "Failed to load the properties file.", ex);
         }
 
         initializeImportModeComboBox();
@@ -90,10 +94,14 @@ public class ImportController implements Initializable {
             ImportWords importWords;
 
             try {
-                importWords = ImportWordsFactory.createImportWords(importMode.getSelectionModel().getSelectedItem(), chosen, encoding.getSelectionModel().getSelectedItem());
+                importWords = ImportWordsFactory.createImportWords(
+                        importMode.getSelectionModel().getSelectedItem(),
+                        chosen,
+                        encoding.getSelectionModel().getSelectedItem());
+
                 List<WordOccurrence> words = importWords.importWords();
                 importWords.close();
-                
+
                 EntityManager em = emfactory.createEntityManager();
                 em.getTransaction().begin();
 
@@ -101,8 +109,10 @@ public class ImportController implements Initializable {
                 wordRepo.saveWords(words);
                 em.getTransaction().commit();
                 em.close();
-            } catch (TransferFailedException | IOException ex) {
-                //TODO: handle exception
+            } catch (TransferFailedException ex) {
+                LOG.log(Level.SEVERE, "Failed to read the file to be imported.", ex);
+            } catch (IOException ex) {
+                LOG.log(Level.SEVERE, "Failed to close the reader.", ex);
             }
 
             importMode.getScene().getWindow().hide();

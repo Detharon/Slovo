@@ -184,7 +184,7 @@ public class RootController {
     }
 
     @FXML
-    public void importClicked() {
+    public void importWordsClicked() {
         try {
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/FXML/Import.fxml"));
             Stage importStage = new Stage();
@@ -203,7 +203,7 @@ public class RootController {
     }
 
     @FXML
-    public void exportClicked() {
+    public void exportWordsClicked() {
         try {
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/FXML/Export.fxml"));
             Stage exportStage = new Stage();
