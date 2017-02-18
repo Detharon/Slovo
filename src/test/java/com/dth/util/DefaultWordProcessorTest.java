@@ -1,4 +1,4 @@
-package com.dth.slovo;
+package com.dth.util;
 
 import com.dth.util.DefaultWordProcessor;
 

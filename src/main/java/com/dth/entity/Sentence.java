@@ -1,7 +1,7 @@
 package com.dth.entity;
 
 import java.io.Serializable;
-import java.util.LinkedList;
+import java.util.ArrayList;
 import java.util.List;
 import javax.persistence.Column;
 import javax.persistence.Entity;
@@ -35,7 +35,7 @@ public class Sentence implements Serializable, Comparable<Sentence> {
 
     public Sentence(String sentence) {
         this.sentence = sentence;
-        this.words = new LinkedList<>();
+        this.words = new ArrayList<>();
     }
 
     public String getSentence() {
@@ -45,11 +45,11 @@ public class Sentence implements Serializable, Comparable<Sentence> {
     public void setSentence(String sentence) {
         this.sentence = sentence;
     }
-
+    
     public List<WordOccurrence> getWords() {
         return words;
     }
-
+    
     public void setWords(List<WordOccurrence> words) {
         this.words = words;
     }

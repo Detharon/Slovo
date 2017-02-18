@@ -165,11 +165,12 @@ public class RootController {
                 WordOccurrenceRepository wordRepo = new WordOccurrenceRepository(em);
                 LOG.log(Level.INFO, "Saving words: {0}", words.size());
                 wordRepo.saveWords(words);
+                em.flush();
 
                 // Saving sentences
                 LOG.log(Level.INFO, "Saving sentences: {0}", sentences.size());
                 SentenceRepository sentenceRepo = new SentenceRepository(em);
-                sentenceRepo.saveSentences(sentences);
+                sentenceRepo.saveSentences(sentences, wordRepo.findAll());
 
                 em.getTransaction().commit();
                 em.close();

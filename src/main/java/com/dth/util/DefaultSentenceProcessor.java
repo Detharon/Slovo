@@ -32,19 +32,15 @@ public class DefaultSentenceProcessor implements SentenceProcessor<Sentence, Wor
 
             if (existingWordOccurrence.isPresent()) {
                 WordOccurrence wordOccurrence = existingWordOccurrence.get();
-
                 wordOccurrence.incrementCount();
-                if (!wordOccurrence.getSentences().contains(sentence)) {
-                    wordOccurrence.getSentences().add(sentence);
-                    if (!sentence.getWords().contains(wordOccurrence)) {
-                        sentence.getWords().add(wordOccurrence);
-                    }
+                
+                if (!sentence.getWords().contains(wordOccurrence)) {
+                    sentence.getWords().add(wordOccurrence);
                 }
             } else {
                 WordOccurrence wordOccurrence = new WordOccurrence(word);
-                wordOccurrence.getSentences().add(sentence);
-                sentence.getWords().add(wordOccurrence);
                 words.add(wordOccurrence);
+                sentence.getWords().add(wordOccurrence);
             }
         }
     }

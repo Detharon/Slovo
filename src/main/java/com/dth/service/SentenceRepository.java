@@ -1,10 +1,11 @@
 package com.dth.service;
 
 import com.dth.entity.Sentence;
-import com.dth.entity.Sentence_;
 import com.dth.entity.WordOccurrence;
+import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
+import java.util.Map;
+import java.util.stream.Collectors;
 import javax.persistence.EntityManager;
 import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.CriteriaDelete;
@@ -20,6 +21,15 @@ public class SentenceRepository {
         this.em = em;
         this.cb = em.getCriteriaBuilder();
     }
+    
+    public List<Sentence> findAll() {
+        CriteriaQuery cq = cb.createQuery(Sentence.class);
+
+        Root<Sentence> sentences = cq.from(Sentence.class);
+        cq.select(sentences);
+        
+        return em.createQuery(cq).getResultList();
+    }
 
     public List<Sentence> fetchSentences(int maxresults) {
         CriteriaQuery cq = cb.createQuery(Sentence.class);
@@ -34,26 +44,28 @@ public class SentenceRepository {
         return fetchSentences(Integer.MAX_VALUE);
     }
 
-    public void saveSentences(List<Sentence> sentences) {
-        // It gets all the results, so it can possibly run out of memory.
-        // Grabbing objects one by one takes too much time.
-        // TODO: manual iterations with setFirstResult/setMaxResults
-        CriteriaQuery cq = cb.createQuery(Sentence.class);
-
-        Root<Sentence> words = cq.from(Sentence.class);
-        cq.select(words);
-
-        List<Sentence> existingSentences = em.createQuery(cq).getResultList();
-
-        sentences.forEach(s -> {
-            Optional<Sentence> result = existingSentences.parallelStream()
-                    .filter(exs -> exs.equals(s))
-                    .findAny();
-
-            if (!result.isPresent()) {
-                em.persist(s);
+    public void saveSentences(List<Sentence> sentences, List<WordOccurrence> listOfExistingWords) {
+        List<Sentence> currentSentences = findAll();
+        
+        Map<String, WordOccurrence> existingWords = listOfExistingWords
+                .parallelStream()
+                .collect(Collectors.toMap(WordOccurrence::getWord, item -> item));
+        
+        for (Sentence sentence : sentences) {
+            if (currentSentences.contains(sentence)) {
+                continue;
             }
-        });
+            
+            List<WordOccurrence> oldWords = sentence.getWords();
+            List<WordOccurrence> newWords = new ArrayList<>();
+            
+            for (WordOccurrence oldWord : oldWords) {
+                newWords.add(existingWords.get(oldWord.getWord()));
+            }
+            
+            sentence.setWords(newWords);
+            em.persist(sentence);
+        }
     }
 
     /**
@@ -67,19 +79,5 @@ public class SentenceRepository {
         delete.from(Sentence.class);
         
         return em.createQuery(delete).executeUpdate();
-    }
-        
-    /**
-     * Erases all empty sentences from the database.
-     * 
-     * @return the number of sentences deleted.
-     */
-    public int deleteEmptySentences() {
-        CriteriaDelete deleteSentences = cb.createCriteriaDelete(Sentence.class);
-        
-        Root<Sentence> sentence = deleteSentences.from(WordOccurrence.class);
-        deleteSentences.where(cb.equal(sentence.get(Sentence_.words), null));
-        
-        return em.createQuery(deleteSentences).executeUpdate();
     }
 }

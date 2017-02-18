@@ -60,27 +60,6 @@ public class DefaultSentenceProcessorTest {
 
     /**
      * Test of processSentence method, of class DefaultSentenceProcessor. Makes
-     * sure that the resultant word has a correct sentence.
-     */
-    @Test
-    public void testProcessSentenceResultantWord() {
-        Sentence sentence = new Sentence(SENTENCES[3]);
-        processor.processSentence(sentence);
-        List<WordOccurrence> resultWords = processor.getWords();
-
-        // Trying to find a "the" word with 3 occurrences
-        WordOccurrence expectedWord = resultWords.stream()
-                .filter(w -> w.getWord().equals("the") && w.getCount() == 3)
-                .findAny()
-                .get();
-
-        // There should be only one sentence in the "the" word - the initial sentence
-        assertTrue(expectedWord.getSentences().size() == 1
-                && expectedWord.getSentences().get(0).equals(sentence));
-    }
-
-    /**
-     * Test of processSentence method, of class DefaultSentenceProcessor. Makes
      * sure that the resultant sentence has the correct words.
      */
     @Test

@@ -2,7 +2,7 @@
 
 A simple JavaFX application that counts word occurences in text files, backed up by an embedded database to store all the necessary data.
 
-Executable can be downloaded [here](https://www.dropbox.com/s/uqzo7255ly7ci31/slovo-0.11.jar?dl=0).
+Executable can be downloaded [here](https://www.dropbox.com/s/lwu51dzpiivl1nl/Slovo.rar?dl=0).
 
 # Usage
 

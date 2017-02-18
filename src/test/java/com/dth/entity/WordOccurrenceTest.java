@@ -26,14 +26,6 @@ public class WordOccurrenceTest {
     }
     
     @Test
-    public void sameWord_differentCount() {
-        WordOccurrence first = new WordOccurrence("word", 1);
-        WordOccurrence second = new WordOccurrence("word", 2);
-
-        assertNotEquals(first, second);
-    }
-    
-    @Test
     public void differentWord_sameCount() {
         WordOccurrence first = new WordOccurrence("word", 1);
         WordOccurrence second = new WordOccurrence("nord", 1);

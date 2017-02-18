@@ -1,7 +1,6 @@
-package com.dth.slovo;
+package com.dth.util;
 
 import com.dth.entity.Sentence;
-import com.dth.util.DefaultDocumentProcessor;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
@@ -18,12 +17,16 @@ import org.junit.BeforeClass;
 
 public class DefaultDocumentProcessorTest {
 
-    private static final String FILENAME = "English";
+    private static String FILENAME;
     private static File fileWithText;
     private static File fileWithResults;
 
     @BeforeClass
     public static void setUp() throws URISyntaxException {
+        FILENAME = "English";
+        System.out.println("Filename = "+FILENAME);
+        System.out.println(DefaultDocumentProcessorTest.class.getClassLoader().getResource(FILENAME + ".txt").toURI());
+
         fileWithText = new File(DefaultDocumentProcessorTest.class.getClassLoader().getResource(FILENAME + ".txt").toURI());
         fileWithResults = new File(DefaultDocumentProcessorTest.class.getClassLoader().getResource(FILENAME + "Sentences.txt").toURI());
     }

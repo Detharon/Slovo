@@ -48,7 +48,6 @@ public class WordOccurrence implements Serializable, Comparable<WordOccurrence> 
         this.word = word;
         this.count = count;
         this.ignored = ignored;
-        this.sentences = sentences;
     }
 
     public Long getId() {
@@ -94,7 +93,7 @@ public class WordOccurrence implements Serializable, Comparable<WordOccurrence> 
     @Override
     public int hashCode() {
         int hash = 0;
-        hash += (id != null ? id.hashCode() : 0);
+        hash += word.hashCode();
         return hash;
     }
 
@@ -112,8 +111,7 @@ public class WordOccurrence implements Serializable, Comparable<WordOccurrence> 
         }
 
         WordOccurrence other = (WordOccurrence) object;
-        return (this.getWord().equals(other.getWord()))
-                && (this.getCount() == other.getCount());
+        return (this.getWord().equals(other.getWord()));
     }
 
     @Override

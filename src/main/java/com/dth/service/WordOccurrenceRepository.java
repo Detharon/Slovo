@@ -1,9 +1,10 @@
 package com.dth.service;
 
 import com.dth.entity.WordOccurrence;
-import com.dth.util.WordUtils;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collectors;
 import javax.persistence.EntityManager;
 import javax.persistence.TypedQuery;
 import javax.persistence.criteria.CriteriaBuilder;
@@ -26,7 +27,7 @@ public class WordOccurrenceRepository {
      *
      * @return the list of word occurrences.
      */
-    public List findAll() {
+    public List<WordOccurrence> findAll() {
         CriteriaQuery cq = cb.createQuery(WordOccurrence.class);
         Root<WordOccurrence> words = cq.from(WordOccurrence.class);
         cq.select(words);
@@ -80,16 +81,21 @@ public class WordOccurrenceRepository {
         // It gets all the results, so it can possibly run out of memory.
         // Grabbing objects one by one takes too much time.
         // TODO: manual iterations with setFirstResult/setMaxResults
-        List<WordOccurrence> oldWords = findAll();
+        // List<WordOccurrence> listOfExistingWords = findAllAndFetchSentences();
+
+        List<WordOccurrence> listOfExistingWords = findAll();
+
+        Map<String, WordOccurrence> existingWords = listOfExistingWords
+                .parallelStream()
+                .collect(Collectors.toMap(WordOccurrence::getWord, item -> item));
 
         for (WordOccurrence newWord : wordOccurrences) {
-            Optional<WordOccurrence> oldWord = oldWords.stream()
-                    .filter(w -> w.getWord().equals(newWord.getWord()))
-                    .findAny();
-            if (oldWord.isPresent()) {
-                // Sum the number of occurrences
-                WordOccurrence word = oldWord.get();
-                WordUtils.merge(word, newWord);
+            Optional<WordOccurrence> word = Optional.ofNullable(existingWords.get(newWord.getWord()));
+
+            if (word.isPresent()) {
+                // Merge the second second word into the first one, which is managed by entity manager
+                WordOccurrence existingWord = word.get();
+                existingWord.setCount(existingWord.getCount() + newWord.getCount());
             } else {
                 em.persist(newWord);
             }
